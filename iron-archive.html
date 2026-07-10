@@ -278,9 +278,8 @@ function mapVeiculo(v) {
 }
 
 async function loadFromSupabase() {
-  const url = localStorage.getItem('sb_url');
-  const key = localStorage.getItem('sb_key');
-  if (!url || !key) return false;
+  const url = localStorage.getItem('sb_url') || 'https://knfkhtpcoopkicyyexgk.supabase.co';
+  const key = localStorage.getItem('sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZmtodHBjb29wa2ljeXlleGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3OTc1MDcsImV4cCI6MjA5NTM3MzUwN30.uFJEy4G1DRq-QgdSUn8zJArm-DwPDsegvpk5dIAGSHM';
   try {
     const res = await fetch(`${url}/rest/v1/veiculos?select=id,ordem,tipo,nome,marca,ano,motor,potencia,peso,tag,descricao,fotos&order=ordem.asc`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` }
