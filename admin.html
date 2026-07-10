@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Iron Archive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ── RESET & TOKENS ─────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0F1012;--bg2:#17191C;--bg3:#1E2024;--surface:#25272C;
+  --border:#2E3035;--border2:#3A3D44;
+  --text:#E8E9EC;--text2:#8B8F99;--text3:#555A66;
+  --accent:#C0392B;--accent-h:#E84435;
+  --green:#2ECC71;--gold:#F39C12;--blue:#3498DB;
+  --radius:6px;--radius-lg:10px;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --transition:0.18s ease;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;}
+button{font-family:var(--font);cursor:pointer;}
+input,textarea,select{font-family:var(--font);font-size:14px;}
+
+/* ── LOGIN ──────────────────────────────────────────────────────────────── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:360px;}
+.login-logo{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-bottom:2rem;}
+.login-logo span{color:var(--accent);}
+.login-title{font-size:1.3rem;font-weight:600;color:var(--text);margin-bottom:0.4rem;}
+.login-sub{font-size:0.8rem;color:var(--text2);margin-bottom:2rem;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:0.75rem;font-weight:500;color:var(--text2);margin-bottom:0.4rem;letter-spacing:0.05em;}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.65rem 0.85rem;color:var(--text);outline:none;transition:border-color var(--transition);}
+.field input:focus{border-color:var(--accent);}
+.btn-login{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:0.75rem;font-size:0.85rem;font-weight:600;letter-spacing:0.03em;transition:background var(--transition);}
+.btn-login:hover{background:var(--accent-h);}
+.login-error{font-size:0.75rem;color:var(--accent);margin-top:0.75rem;display:none;}
+
+/* ── SHELL ──────────────────────────────────────────────────────────────── */
+#app{display:none;height:100vh;display:none;flex-direction:column;}
+#app.active{display:flex;}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────────────── */
+.topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;flex-shrink:0;}
+.topbar-brand{font-family:var(--mono);font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text2);}
+.topbar-brand span{color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:1rem;}
+.topbar-status{font-family:var(--mono);font-size:0.65rem;color:var(--text3);}
+.topbar-status.ok::before{content:'● ';color:var(--green);}
+.topbar-status.err::before{content:'● ';color:var(--accent);}
+.btn-sm{font-size:0.72rem;padding:0.4rem 0.85rem;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text2);transition:all var(--transition);}
+.btn-sm:hover{border-color:var(--text2);color:var(--text);}
+.btn-sm.danger:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────────────────────────── */
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sidebar-section{padding:1rem 1rem 0.5rem;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);}
+.sidebar-list{list-style:none;padding:0 0.5rem 1rem;}
+.sidebar-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.75rem;border-radius:var(--radius);cursor:grab;transition:background var(--transition);margin-bottom:2px;user-select:none;}
+.sidebar-item:hover{background:var(--bg3);}
+.sidebar-item.active{background:var(--surface);border:1px solid var(--border2);}
+.sidebar-item.dragging{opacity:0.4;}
+.sidebar-item.drag-over{border-top:2px solid var(--accent);}
+.item-thumb{width:36px;height:28px;border-radius:3px;background:var(--surface);object-fit:cover;flex-shrink:0;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:0.78rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-meta{font-family:var(--mono);font-size:0.6rem;color:var(--text3);}
+.item-type{font-family:var(--mono);font-size:0.55rem;padding:0.15rem 0.4rem;border-radius:2px;background:var(--surface);color:var(--text3);flex-shrink:0;}
+.item-type.modern{color:var(--gold);}
+.item-type.car{color:var(--blue);}
+.drag-handle{color:var(--text3);font-size:0.8rem;cursor:grab;flex-shrink:0;}
+.sidebar-add{margin:0 0.5rem 1rem;padding:0.55rem 0.75rem;border-radius:var(--radius);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-size:0.75rem;width:calc(100% - 1rem);transition:all var(--transition);text-align:left;}
+.sidebar-add:hover{border-color:var(--green);color:var(--green);}
+
+/* ── EDITOR ──────────────────────────────────────────────────────────────── */
+.editor{flex:1;overflow-y:auto;padding:1.5rem;display:none;}
+.editor.active{display:block;}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:1rem;}
+.empty-state svg{opacity:0.2;}
+.empty-state p{font-family:var(--mono);font-size:0.75rem;letter-spacing:0.1em;}
+
+.editor-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;}
+.editor-title{font-size:1.1rem;font-weight:600;color:var(--text);}
+.editor-sub{font-family:var(--mono);font-size:0.65rem;color:var(--text3);margin-top:0.2rem;}
+.header-actions{display:flex;gap:0.5rem;flex-shrink:0;}
+.btn-save{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:0.5rem 1.25rem;font-size:0.8rem;font-weight:600;transition:background var(--transition);}
+.btn-save:hover{background:var(--accent-h);}
+.btn-save:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-del{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:var(--radius);padding:0.5rem 1rem;font-size:0.8rem;transition:all var(--transition);}
+.btn-del:hover{border-color:var(--accent);color:var(--accent);}
+
+/* grid 2 colunas */
+.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+.editor-grid.single{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:0.4rem;}
+.form-group label{font-size:0.72rem;font-weight:500;color:var(--text2);letter-spacing:0.04em;}
+.form-group input,.form-group select,.form-group textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.6rem 0.8rem;color:var(--text);outline:none;transition:border-color var(--transition);resize:vertical;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group select option{background:var(--bg3);}
+.form-group textarea{min-height:110px;line-height:1.6;}
+
+/* ── FOTOS ───────────────────────────────────────────────────────────────── */
+.photos-section{margin-bottom:1.25rem;}
+.photos-label{font-size:0.72rem;font-weight:500;color:var(--text2);margin-bottom:0.75rem;letter-spacing:0.04em;}
+.photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.75rem;margin-bottom:0.75rem;}
+.photo-slot{position:relative;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;background:var(--bg3);border:1px solid var(--border);}
+.photo-slot img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-slot .ph-empty{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.4rem;color:var(--text3);font-family:var(--mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;}
+.photo-slot .ph-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;gap:0.5rem;opacity:0;transition:opacity var(--transition);}
+.photo-slot:hover .ph-overlay{opacity:1;}
+.ph-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:4px;padding:0.35rem 0.6rem;font-size:0.7rem;cursor:pointer;transition:background var(--transition);}
+.ph-btn:hover{background:rgba(255,255,255,0.22);}
+.ph-btn.del{background:rgba(192,57,43,0.3);border-color:rgba(192,57,43,0.5);}
+.ph-btn.del:hover{background:rgba(192,57,43,0.55);}
+.photo-primary-badge{position:absolute;top:0.3rem;left:0.3rem;background:var(--accent);color:#fff;font-family:var(--mono);font-size:0.55rem;letter-spacing:0.1em;padding:0.15rem 0.4rem;border-radius:2px;}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:1.25rem;text-align:center;cursor:pointer;transition:all var(--transition);}
+.upload-zone:hover,.upload-zone.drag-active{border-color:var(--accent);background:rgba(192,57,43,0.05);}
+.upload-zone p{font-size:0.78rem;color:var(--text2);}
+.upload-zone span{font-family:var(--mono);font-size:0.65rem;color:var(--text3);}
+.upload-progress{height:3px;background:var(--border);border-radius:2px;margin-top:0.5rem;overflow:hidden;display:none;}
+.upload-progress-bar{height:100%;background:var(--accent);transition:width 0.3s ease;width:0%;}
+
+/* ── PREVIEW ─────────────────────────────────────────────────────────────── */
+.preview-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem;}
+.preview-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+.preview-label::after{content:'LIVE';font-size:0.55rem;background:var(--green);color:#000;padding:0.1rem 0.35rem;border-radius:2px;}
+.preview-card{background:#242424;border:1px solid rgba(245,240,232,0.08);border-radius:8px;overflow:hidden;max-width:320px;}
+.preview-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#2A2A2A;display:block;position:relative;}
+.preview-img-ph{width:100%;aspect-ratio:4/3;background:#2A2A2A;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.6rem;color:#555;text-transform:uppercase;letter-spacing:0.1em;}
+.preview-tag{display:inline-block;font-family:var(--mono);font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.25rem 0.5rem;border-radius:2px;background:#C0392B;color:#fff;margin:0.75rem 0.85rem 0;}
+.preview-name{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:0.03em;color:#F5F0E8;margin:0.15rem 0.85rem 0.15rem;}
+.preview-year{font-family:var(--mono);font-size:0.65rem;color:#8C7355;margin:0 0.85rem 0.75rem;}
+.preview-specs{display:flex;gap:1rem;border-top:1px solid rgba(245,240,232,0.08);padding:0.75rem 0.85rem;}
+.preview-spec-val{font-family:var(--mono);font-size:0.7rem;color:#F5F0E8;}
+.preview-spec-key{font-family:var(--mono);font-size:0.55rem;color:#6B5F52;text-transform:uppercase;margin-top:0.1rem;}
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:0.5rem;}
+.toast-msg{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:0.65rem 1rem;font-size:0.78rem;color:var(--text);display:flex;align-items:center;gap:0.6rem;animation:slideIn 0.2s ease;min-width:220px;}
+.toast-msg.ok{border-left:3px solid var(--green);}
+.toast-msg.err{border-left:3px solid var(--accent);}
+.toast-msg.info{border-left:3px solid var(--blue);}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── MODAL (novo item) ───────────────────────────────────────────────────── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;width:100%;max-width:440px;}
+.modal-title{font-size:1rem;font-weight:600;margin-bottom:1.25rem;}
+.modal-actions{display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1.5rem;}
+.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);padding:0.5rem 1rem;font-size:0.8rem;}
+.btn-create{background:var(--green);color:#000;border:none;border-radius:var(--radius);padding:0.5rem 1.25rem;font-size:0.8rem;font-weight:600;}
+
+/* ── SETUP SCREEN ────────────────────────────────────────────────────────── */
+#setupScreen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:1rem;}
+.setup-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:480px;}
+.setup-title{font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;}
+.setup-sub{font-size:0.8rem;color:var(--text2);margin-bottom:1.75rem;line-height:1.6;}
+.setup-steps{counter-reset:step;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.75rem;}
+.setup-step{display:flex;gap:0.85rem;align-items:flex-start;}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.6rem;color:var(--text3);flex-shrink:0;margin-top:0.1rem;}
+.step-text{font-size:0.78rem;color:var(--text2);line-height:1.6;}
+.step-text code{font-family:var(--mono);background:var(--bg3);padding:0.1rem 0.35rem;border-radius:3px;color:var(--text);font-size:0.72rem;}
+.setup-sql{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;font-family:var(--mono);font-size:0.7rem;color:var(--text2);white-space:pre;overflow-x:auto;margin-bottom:1.75rem;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<!-- ── SETUP (primeira vez) ───────────────────────────────────────────────── -->
+<div id="setupScreen">
+  <div class="setup-card">
+    <div class="login-logo">IRON<span>.</span>ARCHIVE <span style="color:var(--text3)">/ admin</span></div>
+    <div class="setup-title">Configuração inicial</div>
+    <div class="setup-sub">Antes de usar o painel, configura o Supabase em 3 passos. Só precisas de fazer isto uma vez.</div>
+    <div class="setup-steps">
+      <div class="setup-step"><div class="step-num">1</div><div class="step-text">Cria um projeto novo em <code>supabase.com</code> e copia a <strong>URL</strong> e a <strong>anon key</strong>.</div></div>
+      <div class="setup-step"><div class="step-num">2</div><div class="step-text">No SQL Editor do Supabase, corre o script abaixo para criar a tabela e o bucket de fotos.</div></div>
+      <div class="setup-step"><div class="step-num">3</div><div class="step-text">Cola a URL e a anon key nos campos abaixo e clica em <strong>Guardar e entrar</strong>.</div></div>
+    </div>
+    <div class="setup-sql">-- Cola isto no SQL Editor do Supabase:
+
+create table veiculos (
+  id uuid primary key default gen_random_uuid(),
+  ordem integer not null default 0,
+  tipo text not null default 'moto', -- 'moto' | 'carro'
+  nome text not null,
+  marca text,
+  ano integer,
+  motor text,
+  potencia text,
+  peso text,
+  tag text,
+  descricao text,
+  fotos jsonb default '[]'::jsonb,
+  criado_em timestamptz default now()
+);
+
+-- Bucket público para fotos:
+insert into storage.buckets (id, name, public)
+values ('veiculos-fotos', 'veiculos-fotos', true);
+
+-- Política de upload (service_role ou auth):
+create policy "Public read" on storage.objects
+  for select using (bucket_id = 'veiculos-fotos');
+
+create policy "Auth upload" on storage.objects
+  for insert with check (bucket_id = 'veiculos-fotos');</div>
+    <div class="editor-grid">
+      <div class="form-group">
+        <label>Supabase URL</label>
+        <input type="text" id="setupUrl" placeholder="https://xxxx.supabase.co">
+      </div>
+      <div class="form-group">
+        <label>Anon Key</label>
+        <input type="text" id="setupKey" placeholder="eyJhbGciOiJIUzI1...">
+      </div>
+    </div>
+    <button class="btn-login" id="setupSave" style="margin-top:1rem;">Guardar e entrar</button>
+  </div>
+</div>
+
+<!-- ── LOGIN ──────────────────────────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">IRON<span>.</span>ARCHIVE <span style="color:var(--text3)">/ admin</span></div>
+    <div class="login-title">Acesso restrito</div>
+    <div class="login-sub">Painel de gestão da coleção</div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pwInput" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="loginBtn">Entrar</button>
+    <div class="login-error" id="loginError">Password incorreta.</div>
+    <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1rem;">
+      <button class="btn-sm" id="showSetup" style="font-size:0.7rem;color:var(--text3);border:none;padding:0;">⚙ Reconfigurar Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ────────────────────────────────────────────────────────────────── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">IRON<span>.</span>ARCHIVE <span style="color:var(--text3)">/admin</span></div>
+    <div class="topbar-right">
+      <span class="topbar-status" id="dbStatus">A ligar…</span>
+      <button class="btn-sm" id="syncBtn">↻ Sincronizar</button>
+      <button class="btn-sm danger" id="logoutBtn">Sair</button>
+    </div>
+  </div>
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">Motos</div>
+      <ul class="sidebar-list" id="listMotos"></ul>
+      <button class="sidebar-add" id="addMoto">+ Adicionar moto</button>
+      <div class="sidebar-section">Automóvel</div>
+      <ul class="sidebar-list" id="listCarros"></ul>
+      <button class="sidebar-add" id="addCarro">+ Adicionar carro</button>
+    </div>
+    <!-- EDITOR -->
+    <div class="editor" id="editor">
+      <!-- preenchido por JS -->
+    </div>
+    <div class="empty-state" id="emptyState">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      <p>Seleciona um item para editar</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL novo item -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Nova moto</div>
+    <div class="editor-grid">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="modalNome" placeholder="ex: Vespa VBB 150">
+      </div>
+      <div class="form-group">
+        <label>Ano</label>
+        <input type="number" id="modalAno" placeholder="ex: 1965">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:0.75rem;">
+      <label>Marca</label>
+      <input type="text" id="modalMarca" placeholder="ex: Piaggio">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modalCancel">Cancelar</button>
+      <button class="btn-create" id="modalCreate">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+// MUDA AQUI A TUA PASSWORD DE ADMIN:
+const ADMIN_PASSWORD = 'ironarchive2024';
+
+// ── SUPABASE ─────────────────────────────────────────────────────────────────
+let sb = null;
+
+function loadSupabase() {
+  const url = localStorage.getItem('sb_url');
+  const key = localStorage.getItem('sb_key');
+  if (!url || !key) return false;
+  sb = supabase.createClient(url, key);
+  return true;
+}
+
+// ── ESTADO ───────────────────────────────────────────────────────────────────
+let veiculos = [];
+let currentId = null;
+let newItemTipo = 'moto';
+let pendingChanges = {};
+let dragSrcIdx = null;
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const hasSupa = loadSupabase();
+  const isLogged = sessionStorage.getItem('admin_ok') === '1';
+
+  if (!hasSupa) { showSetup(); return; }
+  if (isLogged) { showApp(); return; }
+  showLogin();
+});
+
+function showSetup() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+}
+function showLogin() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+}
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  initApp();
+}
+
+// ── SETUP ────────────────────────────────────────────────────────────────────
+document.getElementById('setupSave').addEventListener('click', () => {
+  const url = document.getElementById('setupUrl').value.trim();
+  const key = document.getElementById('setupKey').value.trim();
+  if (!url || !key) { toast('Preenche os dois campos.', 'err'); return; }
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  loadSupabase();
+  showLogin();
+  toast('Configuração guardada!', 'ok');
+});
+document.getElementById('showSetup').addEventListener('click', showSetup);
+
+// ── LOGIN ────────────────────────────────────────────────────────────────────
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('admin_ok', '1');
+    document.getElementById('loginError').style.display = 'none';
+    showApp();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+  }
+}
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem('admin_ok');
+  showLogin();
+});
+
+// ── APP INIT ─────────────────────────────────────────────────────────────────
+async function initApp() {
+  updateDbStatus(false);
+  await loadVeiculos();
+  renderSidebar();
+}
+
+async function loadVeiculos() {
+  try {
+    const { data, error } = await sb.from('veiculos').select('*').order('ordem');
+    if (error) throw error;
+    veiculos = data || [];
+    updateDbStatus(true);
+    toast(`${veiculos.length} itens carregados`, 'ok');
+  } catch (e) {
+    updateDbStatus(false);
+    toast('Erro ao carregar: ' + e.message, 'err');
+    veiculos = [];
+  }
+}
+
+function updateDbStatus(ok) {
+  const el = document.getElementById('dbStatus');
+  el.textContent = ok ? 'Supabase ligado' : 'Sem ligação';
+  el.className = 'topbar-status ' + (ok ? 'ok' : 'err');
+}
+
+document.getElementById('syncBtn').addEventListener('click', async () => {
+  await loadVeiculos();
+  renderSidebar();
+  if (currentId) openEditor(currentId);
+});
+
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const motos = veiculos.filter(v => v.tipo === 'moto');
+  const carros = veiculos.filter(v => v.tipo === 'carro');
+  renderList('listMotos', motos);
+  renderList('listCarros', carros);
+}
+
+function renderList(listId, items) {
+  const ul = document.getElementById(listId);
+  ul.innerHTML = '';
+  items.forEach((item, i) => {
+    const li = document.createElement('li');
+    li.className = 'sidebar-item' + (item.id === currentId ? ' active' : '');
+    li.draggable = true;
+    li.dataset.id = item.id;
+    const mainFoto = (item.fotos && item.fotos[0]) ? item.fotos[0] : null;
+    const typeClass = item.tipo === 'carro' ? 'car' : (item.tag && item.tag.toLowerCase().includes('modern') ? 'modern' : '');
+    li.innerHTML = `
+      <span class="drag-handle" title="Arrastar para reordenar">⠿</span>
+      ${mainFoto
+        ? `<img class="item-thumb" src="${mainFoto}" alt="">`
+        : `<div class="item-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:0.6rem;">📷</div>`}
+      <div class="item-info">
+        <div class="item-name">${item.nome || 'Sem nome'}</div>
+        <div class="item-meta">${item.ano || '—'} · ${item.marca || '—'}</div>
+      </div>
+      <span class="item-type ${typeClass}">${item.tipo}</span>`;
+    li.addEventListener('click', () => openEditor(item.id));
+    // drag
+    li.addEventListener('dragstart', e => { dragSrcIdx = veiculos.findIndex(v => v.id === item.id); li.classList.add('dragging'); });
+    li.addEventListener('dragend', () => li.classList.remove('dragging'));
+    li.addEventListener('dragover', e => { e.preventDefault(); li.classList.add('drag-over'); });
+    li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+    li.addEventListener('drop', e => {
+      e.preventDefault();
+      li.classList.remove('drag-over');
+      const destIdx = veiculos.findIndex(v => v.id === item.id);
+      if (dragSrcIdx === null || dragSrcIdx === destIdx) return;
+      const moved = veiculos.splice(dragSrcIdx, 1)[0];
+      veiculos.splice(destIdx, 0, moved);
+      veiculos.forEach((v, idx) => v.ordem = idx);
+      renderSidebar();
+      saveOrder();
+    });
+    ul.appendChild(li);
+  });
+}
+
+async function saveOrder() {
+  try {
+    const updates = veiculos.map(v => ({ id: v.id, ordem: v.ordem }));
+    for (const u of updates) {
+      await sb.from('veiculos').update({ ordem: u.ordem }).eq('id', u.id);
+    }
+    toast('Ordem guardada', 'ok');
+  } catch (e) {
+    toast('Erro ao guardar ordem', 'err');
+  }
+}
+
+// ── EDITOR ───────────────────────────────────────────────────────────────────
+function openEditor(id) {
+  currentId = id;
+  const v = veiculos.find(x => x.id === id);
+  if (!v) return;
+  pendingChanges = { ...v };
+
+  document.getElementById('emptyState').style.display = 'none';
+  const editor = document.getElementById('editor');
+  editor.classList.add('active');
+  editor.style.display = 'block';
+
+  editor.innerHTML = `
+    <div class="editor-header">
+      <div>
+        <div class="editor-title" id="edTitle">${v.nome || 'Sem nome'}</div>
+        <div class="editor-sub">${v.tipo} · ID: ${v.id.substring(0,8)}…</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-del" id="btnDel">Eliminar</button>
+        <button class="btn-save" id="btnSave">Guardar alterações</button>
+      </div>
+    </div>
+
+    <!-- FOTOS -->
+    <div class="photos-section">
+      <div class="photos-label">Fotos <span style="color:var(--text3);font-family:var(--mono);font-size:0.6rem;">(arrasta para reordenar · primeira = capa)</span></div>
+      <div class="photos-grid" id="photosGrid"></div>
+      <div class="upload-zone" id="uploadZone">
+        <p>Clica ou arrasta fotos para aqui</p>
+        <span>JPG, PNG, WEBP · máx. 5MB cada</span>
+        <div class="upload-progress" id="uploadProgress">
+          <div class="upload-progress-bar" id="uploadBar"></div>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview-section">
+      <div class="preview-label">Pré-visualização do card</div>
+      <div class="preview-card" id="previewCard">
+        ${renderPreviewCard(v)}
+      </div>
+    </div>
+
+    <!-- CAMPOS -->
+    <div class="editor-grid">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" data-field="nome" value="${esc(v.nome)}" placeholder="Nome da moto/carro">
+      </div>
+      <div class="form-group">
+        <label>Marca</label>
+        <input type="text" data-field="marca" value="${esc(v.marca)}" placeholder="ex: Piaggio">
+      </div>
+      <div class="form-group">
+        <label>Ano</label>
+        <input type="number" data-field="ano" value="${v.ano||''}" placeholder="ex: 1972">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select data-field="tipo">
+          <option value="moto" ${v.tipo==='moto'?'selected':''}>Moto</option>
+          <option value="carro" ${v.tipo==='carro'?'selected':''}>Carro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Motor</label>
+        <input type="text" data-field="motor" value="${esc(v.motor)}" placeholder="ex: 150cc 2T">
+      </div>
+      <div class="form-group">
+        <label>Potência</label>
+        <input type="text" data-field="potencia" value="${esc(v.potencia)}" placeholder="ex: 5cv">
+      </div>
+      <div class="form-group">
+        <label>Peso</label>
+        <input type="text" data-field="peso" value="${esc(v.peso)}" placeholder="ex: 88kg">
+      </div>
+      <div class="form-group">
+        <label>Tag (etiqueta no card)</label>
+        <input type="text" data-field="tag" value="${esc(v.tag)}" placeholder="ex: Vintage · Restaurada">
+      </div>
+    </div>
+    <div class="editor-grid single">
+      <div class="form-group">
+        <label>Descrição / história</label>
+        <textarea data-field="descricao" rows="6" placeholder="Escreve aqui a história e contexto desta peça…">${esc(v.descricao)}</textarea>
+      </div>
+    </div>`;
+
+  renderPhotosGrid(v.fotos || []);
+  bindEditorEvents(v);
+  renderSidebar(); // refresh active state
+}
+
+function esc(s) { return s ? String(s).replace(/"/g, '&quot;').replace(/</g,'&lt;') : ''; }
+
+function renderPreviewCard(v) {
+  const fotos = v.fotos || pendingChanges.fotos || [];
+  const src = fotos[0] || null;
+  return `
+    ${src
+      ? `<img class="preview-img" src="${src}" alt="">`
+      : `<div class="preview-img-ph">Foto aqui</div>`}
+    <div style="padding:0 0.85rem;">
+      <span class="preview-tag">${(pendingChanges.tag||v.tag||v.tipo||'—')}</span>
+    </div>
+    <div class="preview-name">${pendingChanges.nome||v.nome||'Nome'}</div>
+    <div class="preview-year">${pendingChanges.ano||v.ano||'—'} · ${pendingChanges.marca||v.marca||'—'}</div>
+    <div class="preview-specs">
+      <div><div class="preview-spec-val">${pendingChanges.motor||v.motor||'—'}</div><div class="preview-spec-key">Motor</div></div>
+      <div><div class="preview-spec-val">${pendingChanges.potencia||v.potencia||'—'}</div><div class="preview-spec-key">Potência</div></div>
+      <div><div class="preview-spec-val">${pendingChanges.peso||v.peso||'—'}</div><div class="preview-spec-key">Peso</div></div>
+    </div>`;
+}
+
+function renderPhotosGrid(fotos) {
+  const grid = document.getElementById('photosGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  fotos.forEach((url, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    slot.innerHTML = `
+      ${i === 0 ? '<span class="photo-primary-badge">Capa</span>' : ''}
+      <img src="${url}" alt="foto ${i+1}">
+      <div class="ph-overlay">
+        ${i > 0 ? `<button class="ph-btn" onclick="movePhotoLeft(${i})">← Capa</button>` : ''}
+        <button class="ph-btn del" onclick="removePhoto(${i})">✕</button>
+      </div>`;
+    grid.appendChild(slot);
+  });
+}
+
+function bindEditorEvents(v) {
+  // inputs → pendingChanges + preview
+  document.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('input', () => {
+      pendingChanges[el.dataset.field] = el.value;
+      updatePreview();
+      document.getElementById('edTitle').textContent = pendingChanges.nome || 'Sem nome';
+    });
+  });
+
+  // guardar
+  document.getElementById('btnSave').addEventListener('click', saveItem);
+
+  // eliminar
+  document.getElementById('btnDel').addEventListener('click', async () => {
+    if (!confirm(`Eliminar "${v.nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await sb.from('veiculos').delete().eq('id', v.id);
+      veiculos = veiculos.filter(x => x.id !== v.id);
+      currentId = null;
+      document.getElementById('editor').classList.remove('active');
+      document.getElementById('editor').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'flex';
+      renderSidebar();
+      toast('Item eliminado', 'ok');
+    } catch (e) { toast('Erro ao eliminar: ' + e.message, 'err'); }
+  });
+
+  // upload zone
+  const zone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  zone.addEventListener('click', () => fileInput.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-active'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-active'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-active'); handleFiles(e.dataTransfer.files); });
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+}
+
+function updatePreview() {
+  const card = document.getElementById('previewCard');
+  if (card) card.innerHTML = renderPreviewCard(pendingChanges);
+}
+
+async function saveItem() {
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = 'A guardar…';
+  try {
+    const payload = {
+      nome: pendingChanges.nome,
+      marca: pendingChanges.marca,
+      ano: parseInt(pendingChanges.ano) || null,
+      tipo: pendingChanges.tipo,
+      motor: pendingChanges.motor,
+      potencia: pendingChanges.potencia,
+      peso: pendingChanges.peso,
+      tag: pendingChanges.tag,
+      descricao: pendingChanges.descricao,
+      fotos: pendingChanges.fotos || []
+    };
+    const { error } = await sb.from('veiculos').update(payload).eq('id', currentId);
+    if (error) throw error;
+    // update local
+    const idx = veiculos.findIndex(v => v.id === currentId);
+    if (idx >= 0) veiculos[idx] = { ...veiculos[idx], ...payload };
+    renderSidebar();
+    toast('Guardado com sucesso!', 'ok');
+  } catch (e) {
+    toast('Erro ao guardar: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar alterações';
+  }
+}
+
+// ── FOTOS ────────────────────────────────────────────────────────────────────
+async function handleFiles(files) {
+  const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!arr.length) return;
+
+  const prog = document.getElementById('uploadProgress');
+  const bar = document.getElementById('uploadBar');
+  prog.style.display = 'block';
+  bar.style.width = '0%';
+
+  const sbUrl = localStorage.getItem('sb_url');
+  let uploaded = 0;
+
+  for (const file of arr) {
+    if (file.size > 5 * 1024 * 1024) { toast(`${file.name} demasiado grande (máx 5MB)`, 'err'); continue; }
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${currentId}/${Date.now()}-${Math.random().toString(36).substr(2,6)}.${ext}`;
+      const { data, error } = await sb.storage.from('veiculos-fotos').upload(path, file, { upsert: false });
+      if (error) throw error;
+      const publicUrl = `${sbUrl}/storage/v1/object/public/veiculos-fotos/${path}`;
+      if (!pendingChanges.fotos) pendingChanges.fotos = [];
+      pendingChanges.fotos.push(publicUrl);
+      uploaded++;
+      bar.style.width = Math.round((uploaded / arr.length) * 100) + '%';
+      renderPhotosGrid(pendingChanges.fotos);
+      updatePreview();
+    } catch (e) {
+      toast(`Erro ao carregar ${file.name}: ${e.message}`, 'err');
+    }
+  }
+  setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%'; }, 1000);
+  if (uploaded) toast(`${uploaded} foto(s) carregada(s)`, 'ok');
+}
+
+function removePhoto(idx) {
+  if (!confirm('Remover esta foto?')) return;
+  pendingChanges.fotos.splice(idx, 1);
+  renderPhotosGrid(pendingChanges.fotos);
+  updatePreview();
+}
+
+function movePhotoLeft(idx) {
+  if (idx === 0) return;
+  const fotos = pendingChanges.fotos;
+  [fotos[0], fotos[idx]] = [fotos[idx], fotos[0]];
+  renderPhotosGrid(fotos);
+  updatePreview();
+}
+
+// ── ADICIONAR ────────────────────────────────────────────────────────────────
+document.getElementById('addMoto').addEventListener('click', () => openModal('moto'));
+document.getElementById('addCarro').addEventListener('click', () => openModal('carro'));
+
+function openModal(tipo) {
+  newItemTipo = tipo;
+  document.getElementById('modalTitle').textContent = tipo === 'moto' ? 'Nova moto' : 'Novo carro';
+  document.getElementById('modalNome').value = '';
+  document.getElementById('modalAno').value = '';
+  document.getElementById('modalMarca').value = '';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalNome').focus();
+}
+document.getElementById('modalCancel').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+document.getElementById('modalCreate').addEventListener('click', createItem);
+document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open'); });
+
+async function createItem() {
+  const nome = document.getElementById('modalNome').value.trim();
+  if (!nome) { toast('O nome é obrigatório', 'err'); return; }
+  const payload = {
+    tipo: newItemTipo,
+    nome,
+    ano: parseInt(document.getElementById('modalAno').value) || null,
+    marca: document.getElementById('modalMarca').value.trim() || null,
+    ordem: veiculos.length,
+    fotos: []
+  };
+  try {
+    const { data, error } = await sb.from('veiculos').insert(payload).select().single();
+    if (error) throw error;
+    veiculos.push(data);
+    document.getElementById('modal').classList.remove('open');
+    renderSidebar();
+    openEditor(data.id);
+    toast(`"${nome}" criado!`, 'ok');
+  } catch (e) {
+    toast('Erro ao criar: ' + e.message, 'err');
+  }
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = `toast-msg ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iron Archive — Coleção de Motos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0D0D0D;--bg2:#1A1A1A;--bg3:#242424;--surface:#2A2A2A;
+    --text:#F5F0E8;--text2:#A89880;--text3:#6B5F52;
+    --accent:#C0392B;--accent2:#8C7355;
+    --border:rgba(245,240,232,0.08);--border2:rgba(245,240,232,0.15);
+    --font-display:'Bebas Neue',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --transition:0.3s cubic-bezier(0.4,0,0.2,1);
+    --radius:4px;--radius-lg:8px;
+  }
+  [data-theme="light"]{
+    --bg:#F5F0E8;--bg2:#EDE6DA;--bg3:#E4DBCC;--surface:#DDD4C2;
+    --text:#1A1208;--text2:#5C4A32;--text3:#8C7355;
+    --border:rgba(26,18,8,0.08);--border2:rgba(26,18,8,0.15);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;line-height:1.6;transition:background var(--transition),color var(--transition);overflow-x:hidden;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;background:var(--bg);border-bottom:1px solid var(--border);transition:background var(--transition);}
+  nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0.5;}
+  .nav-logo{font-family:var(--font-display);font-size:1.6rem;color:var(--text);text-decoration:none;letter-spacing:0.05em;}
+  .nav-logo span{color:var(--accent);}
+  .nav-links{display:flex;align-items:center;gap:2rem;list-style:none;}
+  .nav-links a{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text2);text-decoration:none;transition:color var(--transition);}
+  .nav-links a:hover{color:var(--text);}
+  .nav-right{display:flex;align-items:center;gap:0.75rem;}
+  .nav-back{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);text-decoration:none;transition:color var(--transition);}
+  .nav-back:hover{color:var(--accent);}
+  .theme-toggle{background:none;border:1px solid var(--border2);color:var(--text2);cursor:pointer;width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:border-color var(--transition),color var(--transition);}
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
+  .nav-hamburger{display:none;background:none;border:none;color:var(--text);cursor:pointer;font-size:1.4rem;padding:0.25rem;}
+  .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:80px 2rem 4rem;}
+  .hero-bg{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 59px,var(--border) 60px),repeating-linear-gradient(90deg,transparent,transparent 59px,var(--border) 60px);opacity:0.4;}
+  .hero-slash{position:absolute;top:-10%;right:15%;width:2px;height:130%;background:var(--accent);transform:rotate(-12deg);opacity:0.15;}
+  .hero-slash2{position:absolute;top:-10%;right:22%;width:1px;height:130%;background:var(--accent2);transform:rotate(-12deg);opacity:0.08;}
+  .hero-content{position:relative;z-index:1;text-align:center;max-width:900px;}
+  .hero-eyebrow{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;opacity:0;animation:fadeUp 0.8s 0.2s forwards;}
+  .hero-title{font-family:var(--font-display);font-size:clamp(5rem,15vw,13rem);line-height:0.88;letter-spacing:0.02em;color:var(--text);opacity:0;animation:fadeUp 0.9s 0.35s forwards;}
+  .hero-title .accent{color:var(--accent);}
+  .hero-subtitle{font-size:1rem;color:var(--text2);margin-top:2rem;max-width:420px;margin-left:auto;margin-right:auto;opacity:0;animation:fadeUp 0.9s 0.55s forwards;}
+  .hero-cta{margin-top:3rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp 0.9s 0.7s forwards;}
+  .btn{font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.85rem 2rem;border-radius:var(--radius);text-decoration:none;transition:all var(--transition);cursor:pointer;border:none;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:#a93226;transform:translateY(-2px);}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border2);}
+  .btn-ghost:hover{border-color:var(--text);transform:translateY(-2px);}
+  .hero-scroll{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0.5rem;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.2em;color:var(--text3);animation:bounce 2s infinite;}
+  .hero-scroll::after{content:'';width:1px;height:40px;background:linear-gradient(to bottom,var(--accent2),transparent);}
+  .section{padding:6rem 2rem;}
+  .section-inner{max-width:1100px;margin:0 auto;}
+  .section-label{font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:1rem;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border2);max-width:60px;}
+  .section-title{font-family:var(--font-display);font-size:clamp(2.5rem,6vw,5rem);line-height:1;letter-spacing:0.02em;color:var(--text);margin-bottom:2rem;}
+  .sobre-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+  .sobre-text p{color:var(--text2);margin-bottom:1.2rem;font-size:0.95rem;line-height:1.8;}
+  .sobre-stats{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;transition:border-color var(--transition),transform var(--transition);}
+  .stat-card:hover{border-color:var(--accent2);transform:translateY(-3px);}
+  .stat-num{font-family:var(--font-display);font-size:3.5rem;line-height:1;color:var(--accent);}
+  .stat-label{font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-top:0.5rem;}
+  .gallery-section{background:var(--bg2);}
+  .gallery-controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:3rem;flex-wrap:wrap;gap:1rem;}
+  .sort-controls{display:flex;gap:0.5rem;flex-wrap:wrap;}
+  .sort-btn{font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.5rem 1rem;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all var(--transition);}
+  .sort-btn.active,.sort-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .moto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+  .moto-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:border-color var(--transition),transform var(--transition),box-shadow var(--transition);opacity:0;transform:translateY(20px);}
+  .moto-card.visible{opacity:1;transform:translateY(0);transition:opacity 0.5s ease,transform 0.5s ease,border-color var(--transition),box-shadow var(--transition);}
+  .moto-card:hover{border-color:var(--accent2);transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,0.3);}
+  .moto-img-wrap{overflow:hidden;position:relative;}
+  .moto-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surface);transition:transform 0.5s ease;}
+  .moto-card:hover .moto-img{transform:scale(1.04);}
+  .moto-tag{position:absolute;top:0.75rem;left:0.75rem;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.3rem 0.6rem;border-radius:2px;background:var(--accent);color:#fff;}
+  .moto-tag.modern{background:var(--accent2);}
+  .moto-tag.wip{background:#6B4E1A;}
+  .moto-info{padding:1.2rem 1.4rem 1.4rem;}
+  .moto-name{font-family:var(--font-display);font-size:1.6rem;letter-spacing:0.03em;color:var(--text);margin-bottom:0.2rem;}
+  .moto-year{font-family:var(--font-mono);font-size:0.7rem;color:var(--accent2);letter-spacing:0.1em;margin-bottom:1rem;}
+  .moto-specs{display:flex;gap:1.5rem;border-top:1px solid var(--border);padding-top:0.9rem;}
+  .spec-item{flex:1;}
+  .spec-value{font-family:var(--font-mono);font-size:0.75rem;font-weight:500;color:var(--text);}
+  .spec-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.15rem;}
+  /* LIGHTBOX */
+  .lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;padding:1rem;}
+  .lightbox.open{opacity:1;pointer-events:all;}
+  .lightbox-inner{position:relative;max-width:1000px;width:100%;max-height:90vh;}
+  .lightbox-img{width:100%;max-height:70vh;object-fit:contain;border-radius:var(--radius-lg);display:block;background:var(--bg2);}
+  .lightbox-info{margin-top:1.5rem;display:grid;grid-template-columns:1fr auto;align-items:end;gap:1rem;}
+  .lightbox-title{font-family:var(--font-display);font-size:2.5rem;color:#fff;letter-spacing:0.03em;}
+  .lightbox-detail{font-family:var(--font-mono);font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:0.25rem;}
+  .lightbox-specs{display:flex;gap:2rem;}
+  .lightbox-close{position:absolute;top:-3rem;right:0;background:none;border:1px solid rgba(255,255,255,0.2);color:#fff;cursor:pointer;font-size:1.2rem;width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;transition:border-color var(--transition);}
+  .lightbox-close:hover{border-color:var(--accent);color:var(--accent);}
+  .lightbox-nav{display:flex;gap:0.5rem;margin-top:1.25rem;justify-content:center;}
+  .lightbox-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:background var(--transition);border:none;}
+  .lightbox-dot.active{background:var(--accent);}
+  .lb-arrows{position:absolute;top:35%;left:0;right:0;display:flex;justify-content:space-between;pointer-events:none;}
+  .lb-arrow{pointer-events:all;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;width:44px;height:44px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:border-color var(--transition);}
+  .lb-arrow.left{transform:translateX(-55%);}
+  .lb-arrow.right{transform:translateX(55%);}
+  .lb-arrow:hover{border-color:var(--accent);}
+  /* DETAIL */
+  .detail-overlay{position:fixed;inset:0;z-index:150;background:var(--bg);overflow-y:auto;opacity:0;pointer-events:none;transition:opacity 0.4s ease;}
+  .detail-overlay.open{opacity:1;pointer-events:all;}
+  .detail-hero-img{width:100%;height:55vh;object-fit:cover;display:block;background:var(--bg2);}
+  .detail-back{position:fixed;top:1rem;left:1rem;z-index:160;font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;background:rgba(0,0,0,0.7);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:0.6rem 1.2rem;border-radius:var(--radius);cursor:pointer;transition:border-color var(--transition);display:flex;align-items:center;gap:0.5rem;}
+  .detail-back:hover{border-color:var(--accent);color:var(--accent);}
+  .detail-content{max-width:900px;margin:0 auto;padding:3rem 2rem 6rem;}
+  .detail-eyebrow{font-family:var(--font-mono);font-size:0.65rem;letter-spacing:0.2em;color:var(--accent);text-transform:uppercase;margin-bottom:0.75rem;}
+  .detail-title{font-family:var(--font-display);font-size:clamp(3rem,8vw,6rem);line-height:0.9;color:var(--text);margin-bottom:1.5rem;border-bottom:1px solid var(--border2);padding-bottom:2rem;}
+  .detail-specs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:2.5rem;}
+  .detail-spec{background:var(--bg2);padding:1.25rem 1rem;transition:background var(--transition);}
+  .detail-spec:hover{background:var(--bg3);}
+  .detail-spec-val{font-family:var(--font-mono);font-size:1rem;font-weight:500;color:var(--text);}
+  .detail-spec-key{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-top:0.3rem;}
+  .detail-desc{color:var(--text2);line-height:1.9;font-size:0.95rem;margin-bottom:2.5rem;}
+  footer{border-top:1px solid var(--border);padding:3rem 2rem;text-align:center;}
+  .footer-logo{font-family:var(--font-display);font-size:2.5rem;color:var(--text);margin-bottom:0.5rem;letter-spacing:0.05em;}
+  .footer-logo span{color:var(--accent);}
+  .footer-text{font-family:var(--font-mono);font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;}.hero-eyebrow,.hero-title,.hero-subtitle,.hero-cta{opacity:1;}.moto-card{opacity:1;transform:none;}}
+  @media(max-width:768px){.nav-links{display:none;}.nav-hamburger{display:block;}nav.menu-open .nav-links{display:flex;flex-direction:column;position:fixed;top:60px;left:0;right:0;background:var(--bg);padding:1.5rem 2rem 2rem;border-bottom:1px solid var(--border);gap:1.5rem;}.sobre-grid{grid-template-columns:1fr;gap:2.5rem;}.moto-grid{grid-template-columns:1fr;}.lightbox-info{grid-template-columns:1fr;}.lightbox-specs{flex-wrap:wrap;gap:1rem;}.detail-specs-grid{grid-template-columns:repeat(2,1fr);}.sobre-stats{grid-template-columns:1fr 1fr;}}
+  @media(max-width:480px){.section{padding:4rem 1.25rem;}nav{padding:0 1.25rem;}}
+</style>
+</head>
+<body>
+<nav id="navbar">
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <a href="index.html" class="nav-back">← Início</a>
+    <a href="#" class="nav-logo">IRON<span>.</span>ARCHIVE</a>
+  </div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#colecao" onclick="closeMenu()">Coleção</a></li>
+    <li><a href="#sobre" onclick="closeMenu()">Sobre</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Mudar tema">☀</button>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-slash"></div>
+  <div class="hero-slash2"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">// Coleção Privada · Portugal</p>
+    <h1 class="hero-title">IRON<br><span class="accent">ARCHIVE</span></h1>
+    <p class="hero-subtitle">Doze máquinas. Cada uma com a sua história, do ciclomotor francês ao trail americano.</p>
+    <div class="hero-cta">
+      <a href="#colecao" class="btn btn-primary">Ver coleção</a>
+      <a href="#sobre" class="btn btn-ghost">Sobre mim</a>
+    </div>
+  </div>
+  <div class="hero-scroll">scroll</div>
+</section>
+
+<section class="section" id="sobre">
+  <div class="section-inner">
+    <div class="sobre-grid">
+      <div class="sobre-text">
+        <p class="section-label">Sobre</p>
+        <h2 class="section-title">A Garagem</h2>
+        <p>Uma coleção construída peça a peça ao longo dos anos. Não há uma única lógica — há Vespas italianas, Velosolex francesas, uma Honda japonesa de bolso e uma Polaris americana de todo-o-terreno. E até uma Casal portuguesa, que é quase um dever.</p>
+        <p>Algumas chegaram prontas, outras ainda estão em restauro. O que importa é que cada uma representa uma época diferente de fazer máquinas — e de as usar.</p>
+      </div>
+      <div class="sobre-stats">
+        <div class="stat-card"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Motos na coleção</div></div>
+        <div class="stat-card"><div class="stat-num" id="statVintage">—</div><div class="stat-label">Vintage</div></div>
+        <div class="stat-card"><div class="stat-num" id="statModern">—</div><div class="stat-label">Modernas</div></div>
+        <div class="stat-card"><div class="stat-num" id="statYears">—</div><div class="stat-label">Anos cobertos</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section gallery-section" id="colecao">
+  <div class="section-inner">
+    <p class="section-label">Coleção</p>
+    <div class="gallery-controls">
+      <h2 class="section-title" style="margin-bottom:0">As Máquinas</h2>
+      <div class="sort-controls">
+        <button class="sort-btn active" data-sort="custom">Original</button>
+        <button class="sort-btn" data-sort="year-asc">Ano ↑</button>
+        <button class="sort-btn" data-sort="year-desc">Ano ↓</button>
+        <button class="sort-btn" data-sort="brand">Marca</button>
+      </div>
+    </div>
+    <div class="moto-grid" id="motoGrid"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">IRON<span>.</span>ARCHIVE</div>
+  <p class="footer-text">Coleção privada · Portugal</p>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lbClose">✕</button>
+    <div class="lb-arrows">
+      <button class="lb-arrow left" id="lbPrev">‹</button>
+      <button class="lb-arrow right" id="lbNext">›</button>
+    </div>
+    <img class="lightbox-img" id="lbImg" src="" alt="">
+    <div class="lightbox-info">
+      <div>
+        <div class="lightbox-title" id="lbTitle"></div>
+        <div class="lightbox-detail" id="lbDetail"></div>
+      </div>
+      <div class="lightbox-specs" id="lbSpecs"></div>
+    </div>
+    <div class="lightbox-nav" id="lbDots"></div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="detail-overlay" id="detailOverlay">
+  <button class="detail-back" id="detailBack">‹ Voltar</button>
+  <img class="detail-hero-img" id="detailHeroImg" src="" alt="">
+  <div class="detail-content">
+    <div class="detail-eyebrow" id="detailEyebrow"></div>
+    <div class="detail-title" id="detailTitle"></div>
+    <div class="detail-specs-grid" id="detailSpecsGrid"></div>
+    <p class="detail-desc" id="detailDesc"></p>
+  </div>
+</div>
+
+<script>
+const motos = [
+  {
+    id:1, name:"Vespa VBB 150", year:1960, brand:"Piaggio", type:"vintage",
+    engine:"150cc", power:"~5cv", weight:"88kg", tag:"Vintage",
+    img:"",
+    desc:"A Vespa VBB 150 surgiu em 1960 como evolução direta da VBA — a grande novidade foi a caixa de quatro velocidades, que veio finalmente equiparar a pequena scooter italiana com a potência que o motor merecia. A carroçaria ganhou tiras decorativas em alumínio nos painéis laterais e um farol traseiro mais amplo. Foi apresentada ao mundo nos Jogos Olímpicos de Roma de 1960, onde a sua elegância e fiabilidade a tornaram numa sensação. Entre 1960 e 1967, foram produzidas mais de 272 mil unidades, e a VBB tornou-se a base técnica de praticamente todas as Vespas Largeframe que se seguiram. Um exemplar desta série é, hoje, um clássico de colecionador de primeira linha."
+  },
+  {
+    id:2, name:"VéloSolex 45cc", year:1946, brand:"Solex", type:"vintage",
+    engine:"45cc 2T", power:"0.4cv", weight:"25kg", tag:"Vintage · Restaurada",
+    img:"",
+    desc:"A VéloSolex nasceu durante a ocupação alemã de França, quando Maurice Goudard e Marcel Mennesson conceberam a ideia de colocar um pequeno motor sobre a roda dianteira de uma bicicleta. O primeiro protótipo data de 1941; a produção em série começou em abril de 1946. O motor de 45cc a dois tempos, montado diretamente sobre a roda da frente e transmitindo força por um rolo de borracha, era absolutamente rudimentar — mas funcionava, e fazia-o com uma economia extraordinária: 100 quilómetros com um litro de mistura. A fábrica de Courbevoie montava 15 unidades por dia no início; no auge da produção, nos anos 60, chegou a 1500 por dia. Este primeiro modelo, com os seus 25 kg e o tanque de 1 litro, é o mais raro e procurado pelos colecionadores. Esta está restaurada."
+  },
+  {
+    id:3, name:"VéloSolex 45cc", year:1946, brand:"Solex", type:"vintage",
+    engine:"45cc 2T", power:"0.4cv", weight:"25kg", tag:"Vintage · Por restaurar",
+    img:"",
+    desc:"O segundo exemplar do primeiro modelo VéloSolex desta coleção — o par perfeito para a já restaurada. Encontra-se por restaurar, o que o torna um projeto com enorme potencial. Os primeiros modelos Solex de 45cc são peças raras: foram fabricados de 1946 a 1953, com produções relativamente pequenas comparadas com os modelos posteriores. O motor sem embragem obrigava o condutor a para e arrancar a pé a cada paragem — uma característica que desapareceu nos modelos seguintes. Ter dois exemplares deste modelo pioneiro numa coleção é, simplesmente, extraordinário."
+  },
+  {
+    id:4, name:"Honda Mini Trail Z50A", year:1968, brand:"Honda", type:"vintage",
+    engine:"49cc OHC 4T", power:"1.95cv", weight:"~47kg", tag:"Vintage",
+    img:"",
+    desc:"A Honda Z50A chegou ao mercado americano em 1968 como a 'Mini Trail K0' — também conhecida como 'High Bar' pelos guidões elevados — e foi uma pequena revolução. Com o motor de 49cc de 4 tempos do legendário C100 Cub, caixa de 3 velocidades semiautomática, guidões dobráveis e rodas de 8 polegadas, era simultaneamente um brinquedo para adultos e um meio de transporte real. Cabia no porta-bagagens de um carro, era imune à ferrugem e praticamente inquebrável. A YMCA americana adotou-a em massa para ensinar crianças a andar de mota. O apelido 'Monkey Bike' deve-se à postura simiana obrigada ao seu tamanho. Este modelo K0 de 1968 é o primeiro ano de produção — sem suspensão traseira ('hardtail'), o mais original de todos."
+  },
+  {
+    id:5, name:"Vespa PK 50", year:1982, brand:"Piaggio", type:"vintage",
+    engine:"50cc 2T", power:"~1.5cv", weight:"75kg", tag:"Vintage",
+    img:"",
+    desc:"A Vespa PK 50 foi lançada em 1982 como a entrada mais acessível na família Vespa, substituindo a popular ET3 nas cilindradas menores. Com uma carroçaria completamente redesenhada — mais angular e moderna do que as clássicas largeframe — a PK trouxe um motor de 50cc a dois tempos, arranque elétrico de série e uma estética que marcou os anos 80. Em Portugal e Espanha foi especialmente popular entre jovens que queriam o prestígio da marca italiana sem a cilindrada maior. Pequena, leve e fiável, a PK 50 é hoje um clássico de geração, recordando vadiagens de verão e a liberdade dos 16 anos."
+  },
+  {
+    id:6, name:"Yamaha BW'S MotoGP", year:2006, brand:"Yamaha", type:"vintage",
+    engine:"49cc 2T", power:"3.2cv", weight:"75kg", tag:"Vintage",
+    img:"",
+    desc:"A história da BW'S começa numa reunião de jovens designers da Yamaha numa praia japonesa, frustrados por não terem ideias novas para apresentar. Alguém disse, meio a brincar, que devia ser possível fazer uma scooter capaz de andar na areia — e assim nasceu, em 1987, uma das scooters mais originais da história: pneus balão largos, dois faróis redondos, suspensão generosa. A versão MotoGP de 2006 é a edição especial em preto mate com grafismos inspirados nas máquinas M1 do campeonato do mundo — a cor da equipa Yamaha de Valentino Rossi. Uma edição limitada com muito carácter, ainda com o motor 2T original."
+  },
+  {
+    id:7, name:"Polaris Trail Blazer 250", year:1990, brand:"Polaris", type:"vintage",
+    engine:"250cc 2T", power:"~25cv", weight:"~145kg", tag:"Vintage · 1.ª Série",
+    img:"",
+    desc:"A Polaris não é apenas motores de neve — no início dos anos 90, a marca americana lançou-se no mercado dos quads de entrada com o Trail Blazer 250, um ATV de 2 tempos leve, ágil e resistente, pensado para terrenos irregulares e juventude americana com vocação para o campo. O primeiro modelo, com motor de 250cc de dois tempos, suspensão independente na frente e travões a tambor, era suficientemente capaz para pistas de terra batida e trilhos florestais. Ter a primeira série desta máquina numa coleção de motos não é comum — mas é exatamente este tipo de peça fora do convencional que torna uma garagem interessante."
+  },
+  {
+    id:8, name:"Gilera 7HP", year:1955, brand:"Gilera", type:"vintage",
+    engine:"~175cc", power:"~7cv", weight:"~110kg", tag:"Em Restauro",
+    img:"",
+    desc:"A Gilera é uma das marcas mais históricas da motocicleta italiana. Fundada em 1909 por Giuseppe Gilera numa pequena oficina em Milão, chegou ao topo da competição internacional nos anos 50 com as suas máquinas de quatro cilindros — vencendo o campeonato do mundo de 500cc seis vezes em oito anos. A marca foi integrada no Grupo Piaggio em 1969. Este exemplar de 7HP está em fase ativa de restauro — uma das peças mais exigentes da coleção e, possivelmente, a mais rara. Quando estiver concluído, será o elemento âncora histórico de toda a garagem."
+  },
+  {
+    id:9, name:"Yamaha XT 350", year:1989, brand:"Yamaha", type:"vintage",
+    engine:"346cc 4T", power:"27cv", weight:"136kg", tag:"Vintage",
+    img:"",
+    desc:"A XT 350 de 1989 é branca e vermelha — as cores originais de fábrica que definiram a estética trail da Yamaha nos anos 80. Com motor monocilíndrico de quatro tempos e 346cc, a XT 350 era uma enduro de estrada genuína: ligeira, mecânica simples, fiável em qualquer terreno. Foi usada por polícias, agricultores e entusiastas de todo-o-terreno em igual medida. O motor SOHC de válvulas em cabeçote foi um dos mais robustos da sua era — com manutenção adequada, muitos exemplares ainda circulam com mais de 100.000km. Uma máquina honesta, sem artifícios."
+  },
+  {
+    id:10, name:"Casal Bossini 2V", year:1992, brand:"Casal", type:"vintage",
+    engine:"50cc 2T", power:"2.5cv", weight:"~55kg", tag:"Vintage · Nacional",
+    img:"",
+    desc:"A Metalurgia Casal, fundada em Aveiro por João Francisco do Casal, foi a maior empresa portuguesa do setor das duas rodas — 40 anos de produção, cerca de 77 modelos diferentes. A Bossini surgiu no início dos anos 90 como sucessora da lendária Boss, com carroçaria mais moderna, arranque elétrico e o motor M147 de sempre. Branca, como este exemplar, era o modelo mais limpo da gama. Chegou tarde demais para salvar a empresa — que encerrou em 2000 — mas a tempo de entrar nas histórias de quem cresceu nos anos 90 em Portugal. Ter uma Casal numa coleção é quase uma obrigação patriótica."
+  },
+  {
+    id:11, name:"Aprilia SR 125 GR (Preta)", year:2023, brand:"Aprilia", type:"modern",
+    engine:"124cc 4T", power:"15cv", weight:"~115kg", tag:"Moderna",
+    img:"",
+    desc:"A Aprilia SR 125 GR é a scooter italiana mais desportiva do segmento de 125cc — e a versão em preto mate deixa isso claro à primeira vista. Com motor de quatro tempos de 124cc, injeção eletrónica, travão dianteiro de disco e suspensão telescópica invertida, a SR 125 GR é o oposto de uma scooter de cidade genérica. O design agressivo e a postura de condução baixa e inclinada para a frente aproximam-na das grandes scooters sportivas. Uma máquina moderna com ADN de corrida."
+  },
+  {
+    id:12, name:"Aprilia SR 125 GR (Vermelha)", year:2023, brand:"Aprilia", type:"modern",
+    engine:"124cc 4T", power:"15cv", weight:"~115kg", tag:"Moderna",
+    img:"",
+    desc:"O par perfeito da SR 125 GR preta — em vermelho Aprilia, a cor da marca italiana por excelência. A versão vermelha traz a herança das máquinas de corrida da Aprilia diretamente para a estrada: Aprilia é a marca com mais títulos mundiais de velocidade depois de Honda e Yamaha, e esse ADN competitivo está visível até na scooter de 125cc. Ter as duas cores lado a lado é uma declaração de intenções: esta coleção não é apenas de máquinas antigas — é de carácter em toda a forma."
+  }
+];
+
+let currentSort = 'custom';
+let lbIdx = 0;
+let lbMoto = null;
+
+function phImg(name) {
+  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect fill='%23242424' width='400' height='300'/><text x='50%25' y='44%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='12' fill='%236B5F52' letter-spacing='2'>${encodeURIComponent(name.toUpperCase().substring(0,22))}</text><text x='50%25' y='60%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='9' fill='%234A3E32' letter-spacing='1'>FOTO AQUI</text></svg>`;
+}
+
+function updateStats(){
+  const v=motos.filter(m=>m.type==='vintage').length;
+  const mod=motos.filter(m=>m.type==='modern').length;
+  const yrs=Math.max(...motos.map(m=>m.year))-Math.min(...motos.map(m=>m.year));
+  document.getElementById('statTotal').textContent=motos.length;
+  document.getElementById('statVintage').textContent=v;
+  document.getElementById('statModern').textContent=mod;
+  document.getElementById('statYears').textContent=yrs;
+}
+
+function sortMotos(arr,mode){
+  const copy=[...arr];
+  if(mode==='year-asc') return copy.sort((a,b)=>a.year-b.year);
+  if(mode==='year-desc') return copy.sort((a,b)=>b.year-a.year);
+  if(mode==='brand') return copy.sort((a,b)=>a.brand.localeCompare(b.brand));
+  return copy;
+}
+
+function renderGrid(){
+  const grid=document.getElementById('motoGrid');
+  const sorted=sortMotos(motos,currentSort);
+  grid.innerHTML='';
+  sorted.forEach((m,i)=>{
+    const src=m.img||phImg(m.name);
+    const tagClass=m.type==='modern'?'modern':m.tag&&m.tag.includes('restauro')?'wip':'';
+    const card=document.createElement('div');
+    card.className='moto-card';
+    card.innerHTML=`
+      <div class="moto-img-wrap">
+        <img class="moto-img" src="${src}" alt="${m.name}" loading="lazy">
+        <span class="moto-tag ${tagClass}">${m.tag||m.type}</span>
+      </div>
+      <div class="moto-info">
+        <div class="moto-name">${m.name}</div>
+        <div class="moto-year">${m.year} · ${m.brand}</div>
+        <div class="moto-specs">
+          <div class="spec-item"><div class="spec-value">${m.engine}</div><div class="spec-label">Motor</div></div>
+          <div class="spec-item"><div class="spec-value">${m.power}</div><div class="spec-label">Potência</div></div>
+          <div class="spec-item"><div class="spec-value">${m.weight}</div><div class="spec-label">Peso</div></div>
+        </div>
+      </div>`;
+    card.addEventListener('click',()=>openDetail(m));
+    grid.appendChild(card);
+    setTimeout(()=>card.classList.add('visible'),i*70);
+  });
+}
+
+function openDetail(m){
+  lbMoto=m;
+  const src=m.img||phImg(m.name);
+  document.getElementById('detailHeroImg').src=src;
+  document.getElementById('detailHeroImg').alt=m.name;
+  document.getElementById('detailEyebrow').textContent=`${m.brand} · ${m.year} · ${m.tag||m.type}`;
+  document.getElementById('detailTitle').textContent=m.name;
+  document.getElementById('detailDesc').textContent=m.desc;
+  document.getElementById('detailSpecsGrid').innerHTML=[
+    {k:'Motor',v:m.engine},{k:'Potência',v:m.power},{k:'Peso',v:m.weight},{k:'Ano',v:m.year},{k:'Marca',v:m.brand}
+  ].map(s=>`<div class="detail-spec"><div class="detail-spec-val">${s.v}</div><div class="detail-spec-key">${s.k}</div></div>`).join('');
+  document.getElementById('detailOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+document.getElementById('detailBack').addEventListener('click',()=>{
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.body.style.overflow='';
+});
+
+// Lightbox (from detail hero click)
+document.getElementById('detailHeroImg').style.cursor='pointer';
+document.getElementById('detailHeroImg').addEventListener('click',()=>{
+  if(!lbMoto) return;
+  openLightbox(lbMoto);
+});
+
+function openLightbox(m){
+  lbMoto=m; lbIdx=0;
+  renderLb();
+  document.getElementById('lightbox').classList.add('open');
+}
+function renderLb(){
+  const src=lbMoto.img||phImg(lbMoto.name);
+  document.getElementById('lbImg').src=src;
+  document.getElementById('lbTitle').textContent=lbMoto.name;
+  document.getElementById('lbDetail').textContent=`${lbMoto.year} · ${lbMoto.brand}`;
+  document.getElementById('lbSpecs').innerHTML=[
+    {k:'Motor',v:lbMoto.engine},{k:'Potência',v:lbMoto.power}
+  ].map(s=>`<div><div class="spec-value" style="color:#fff">${s.v}</div><div class="spec-label">${s.k}</div></div>`).join('');
+  document.getElementById('lbDots').innerHTML='';
+}
+document.getElementById('lbClose').onclick=()=>{document.getElementById('lightbox').classList.remove('open');};
+document.getElementById('lbPrev').onclick=()=>{};
+document.getElementById('lbNext').onclick=()=>{};
+document.getElementById('lightbox').addEventListener('click',e=>{if(e.target===document.getElementById('lightbox')){document.getElementById('lightbox').classList.remove('open');}});
+
+document.addEventListener('keydown',e=>{
+  const det=document.getElementById('detailOverlay');
+  const lb=document.getElementById('lightbox');
+  if(lb.classList.contains('open')&&e.key==='Escape'){lb.classList.remove('open');}
+  if(det.classList.contains('open')&&e.key==='Escape'){det.classList.remove('open');document.body.style.overflow='';}
+});
+
+document.querySelectorAll('.sort-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSort=btn.dataset.sort;
+    renderGrid();
+  });
+});
+
+let dark=true;
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  dark=!dark;
+  document.documentElement.setAttribute('data-theme',dark?'':'light');
+  document.getElementById('themeToggle').textContent=dark?'☀':'☾';
+});
+const hamburger=document.getElementById('hamburger');
+const navbar=document.getElementById('navbar');
+hamburger.addEventListener('click',()=>navbar.classList.toggle('menu-open'));
+function closeMenu(){navbar.classList.remove('menu-open');}
+
+updateStats();
+renderGrid();
+</script>
+</body>
+</html>

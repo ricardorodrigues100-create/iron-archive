@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Collection — Arquivo Pessoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #0A0A0A;
+    color: #F5F0E8;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+  @media (max-width: 768px) { body { overflow: auto; } }
+
+  .portal {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100vh;
+    min-height: 500px;
+  }
+  @media (max-width: 768px) {
+    .portal { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; height: auto; min-height: 100vh; }
+  }
+
+  /* DIVIDER */
+  .divider {
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent 0%, #C0392B 30%, #C0392B 70%, transparent 100%);
+    z-index: 10;
+    transform: translateX(-50%);
+  }
+  .divider-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #C0392B;
+    box-shadow: 0 0 0 4px rgba(192,57,43,0.15);
+  }
+  @media (max-width: 768px) {
+    .divider { display: none; }
+  }
+
+  /* PANELS */
+  .panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 3rem 3rem;
+    overflow: hidden;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.5s ease;
+    min-height: 50vh;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .panel-motos::before { background: rgba(192,57,43,0.04); }
+  .panel-carro::before { background: rgba(94,130,76,0.04); }
+  .panel:hover::before { opacity: 1; }
+
+  /* BG grid */
+  .panel-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(245,240,232,0.03) 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(245,240,232,0.03) 60px);
+    pointer-events: none;
+  }
+
+  /* Corner labels */
+  .corner {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.2);
+  }
+  .corner-tl { top: 1.5rem; left: 1.5rem; }
+  .corner-br { bottom: 1.5rem; right: 1.5rem; }
+
+  /* Panel content */
+  .panel-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 380px;
+  }
+  .panel-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+  }
+  .panel:hover .panel-eyebrow { opacity: 1; }
+  .panel-motos .panel-eyebrow { color: #C0392B; }
+  .panel-carro .panel-eyebrow { color: #8BA86A; }
+
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 7vw, 7rem);
+    line-height: 0.88;
+    letter-spacing: 0.03em;
+    color: #F5F0E8;
+    margin-bottom: 1.5rem;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+  .panel-carro .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 6vw, 6rem);
+    font-style: italic;
+    letter-spacing: 0.01em;
+  }
+  .panel:hover .panel-title { transform: translateY(-4px); }
+
+  .panel-desc {
+    font-size: 0.82rem;
+    color: rgba(245,240,232,0.4);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    transition: color 0.3s ease;
+  }
+  .panel:hover .panel-desc { color: rgba(245,240,232,0.65); }
+
+  .panel-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.75rem;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  .panel:hover .panel-cta { transform: translateY(0); opacity: 1; }
+  .panel-motos .panel-cta {
+    background: #C0392B;
+    color: #fff;
+  }
+  .panel-carro .panel-cta {
+    background: #4A6741;
+    color: #F5F0E8;
+  }
+  .panel-cta::after { content: '→'; }
+
+  /* Count badge */
+  .panel-count {
+    position: absolute;
+    bottom: 3rem;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    opacity: 0.04;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .panel:hover .panel-count { opacity: 0.07; }
+  .panel-motos .panel-count { color: #C0392B; right: 1rem; }
+  .panel-carro .panel-count { color: #8BA86A; left: 1rem; }
+
+  /* Top bar */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 52px;
+    pointer-events: none;
+  }
+  .topbar-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.3);
+  }
+  .topbar-logo span { color: #C0392B; }
+
+  /* Fade in */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .panel-content { animation: fadeIn 0.9s cubic-bezier(0.4,0,0.2,1) both; }
+  .panel-motos .panel-content { animation-delay: 0.1s; }
+  .panel-carro .panel-content { animation-delay: 0.25s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel-content { animation: none; }
+    .panel-cta { opacity: 1; transform: none; }
+  }
+  @media (max-width: 768px) {
+    .panel-cta { opacity: 1; transform: none; }
+    .panel-count { font-size: 5rem; bottom: 1.5rem; }
+    .panel { padding: 4rem 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-logo">The<span>.</span>Collection</span>
+</div>
+
+<div class="divider">
+  <div class="divider-dot"></div>
+</div>
+
+<main class="portal">
+
+  <a class="panel panel-motos" href="iron-archive.html">
+    <div class="panel-bg"></div>
+    <span class="corner corner-tl">// 001</span>
+    <span class="corner corner-br">Coleção · Motos</span>
+    <div class="panel-count">M</div>
+    <div class="panel-content">
+      <p class="panel-eyebrow">Coleção de motos</p>
+      <h2 class="panel-title">IRON<br>ARCHIVE</h2>
+      <p class="panel-desc">Vintage e modernas. Cada máquina com a sua história, ficha técnica e galeria própria.</p>
+      <span class="panel-cta">Ver coleção</span>
+    </div>
+  </a>
+
+  <a class="panel panel-carro" href="garage-one.html">
+    <div class="panel-bg"></div>
+    <span class="corner corner-tl">// 002</span>
+    <span class="corner corner-br">Coleção · Automóvel</span>
+    <div class="panel-count">C</div>
+    <div class="panel-content">
+      <p class="panel-eyebrow">Automóvel clássico</p>
+      <h2 class="panel-title">Garage<br>One</h2>
+      <p class="panel-desc">Um clássico com caráter. Ficha técnica completa e galeria detalhada.</p>
+      <span class="panel-cta">Descobrir</span>
+    </div>
+  </a>
+
+</main>
+
+</body>
+</html>
+<!-- Admin link (discreto no rodapé) -->
+<style>
+.admin-link {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.15);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.admin-link:hover { color: rgba(245,240,232,0.5); }
+</style>
+<a href="admin.html" class="admin-link">⚙ admin</a>

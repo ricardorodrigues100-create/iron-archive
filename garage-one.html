@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garage One — Citroën Méhari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0C0F0A;--bg2:#141A11;--bg3:#1B2317;--surface:#22301C;
+    --text:#EDE8DC;--text2:#8A9A7E;--text3:#4D5E45;
+    --gold:#B8973A;--gold2:#8C7030;--green:#4A6741;--green2:#5E8A4C;
+    --border:rgba(237,232,220,0.07);--border2:rgba(237,232,220,0.13);
+    --transition:0.3s cubic-bezier(0.4,0,0.2,1);--radius:4px;--radius-lg:8px;
+  }
+  [data-theme="light"]{
+    --bg:#F0EDE4;--bg2:#E6E1D5;--bg3:#DDD7C8;--surface:#D4CCBA;
+    --text:#1A1A0E;--text2:#4A5A3E;--text3:#7A8A6E;
+    --border:rgba(26,26,14,0.08);--border2:rgba(26,26,14,0.14);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;transition:background var(--transition),color var(--transition);}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:60px;background:var(--bg);border-bottom:1px solid var(--border);transition:background var(--transition);}
+  nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.4;}
+  .nav-left{display:flex;align-items:center;gap:1.5rem;}
+  .nav-back{font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);text-decoration:none;display:flex;align-items:center;gap:0.4rem;transition:color var(--transition);}
+  .nav-back:hover{color:var(--gold);}
+  .nav-sep{width:1px;height:20px;background:var(--border2);}
+  .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;color:var(--text);text-decoration:none;}
+  .nav-logo span{color:var(--gold);font-style:normal;}
+  .nav-links{display:flex;align-items:center;gap:2.5rem;list-style:none;}
+  .nav-links a{font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text2);text-decoration:none;transition:color var(--transition);}
+  .nav-links a:hover{color:var(--text);}
+  .nav-right{display:flex;align-items:center;gap:1rem;}
+  .theme-toggle{background:none;border:1px solid var(--border2);color:var(--text2);cursor:pointer;width:34px;height:34px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:border-color var(--transition),color var(--transition);}
+  .theme-toggle:hover{border-color:var(--gold);color:var(--gold);}
+  .nav-hamburger{display:none;background:none;border:none;color:var(--text);cursor:pointer;font-size:1.4rem;padding:0.25rem;}
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;overflow:hidden;padding:80px 2rem 5rem;}
+  .hero-backdrop{position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 60%,rgba(74,103,65,0.12) 0%,transparent 70%),radial-gradient(ellipse 40% 30% at 50% 80%,rgba(184,151,58,0.06) 0%,transparent 60%);}
+  .hero-lines{position:absolute;inset:0;pointer-events:none;}
+  .hero-lines::before,.hero-lines::after{content:'';position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+  .hero-lines::before{top:35%;}
+  .hero-lines::after{top:65%;}
+  .hero-content{position:relative;z-index:1;text-align:center;max-width:820px;width:100%;}
+  .hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:2rem;opacity:0;animation:fadeUp 0.8s 0.2s forwards;}
+  .hero-title{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,11vw,10rem);font-style:italic;font-weight:400;line-height:0.9;color:var(--text);letter-spacing:-0.01em;margin-bottom:0.5rem;opacity:0;animation:fadeUp 0.9s 0.35s forwards;}
+  .hero-title-sub{font-family:'Playfair Display',serif;font-size:clamp(1.1rem,3vw,2.5rem);font-weight:400;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3rem;opacity:0;animation:fadeUp 0.9s 0.45s forwards;}
+  .hero-specs{display:flex;justify-content:center;gap:0;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);margin-bottom:3rem;opacity:0;animation:fadeUp 0.9s 0.6s forwards;}
+  .hero-spec{flex:1;max-width:160px;padding:1rem 0.5rem;text-align:center;border-right:1px solid var(--border);}
+  .hero-spec:last-child{border-right:none;}
+  .hero-spec-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:500;color:var(--text);}
+  .hero-spec-key{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);margin-top:0.25rem;}
+  .hero-cta{opacity:0;animation:fadeUp 0.9s 0.75s forwards;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+  .btn{font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.85rem 2rem;border-radius:var(--radius);text-decoration:none;cursor:pointer;border:none;transition:all var(--transition);}
+  .btn-primary{background:var(--green);color:var(--text);}
+  .btn-primary:hover{background:var(--green2);transform:translateY(-2px);}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border2);}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);}
+  .hero-scroll{position:absolute;bottom:1.75rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0.5rem;font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;color:var(--text3);animation:bounce 2.5s infinite;}
+  .hero-scroll::after{content:'';width:1px;height:36px;background:linear-gradient(to bottom,var(--gold),transparent);}
+  .section{padding:6rem 2.5rem;}
+  .section-inner{max-width:1100px;margin:0 auto;}
+  .section-label{font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:1rem;}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border2);max-width:60px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,4rem);font-style:italic;color:var(--text);margin-bottom:2.5rem;}
+  .historia-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;}
+  .historia-text p{color:var(--text2);margin-bottom:1.3rem;font-size:0.95rem;line-height:1.85;}
+  .historia-text p:first-child::first-letter{font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;color:var(--gold);float:left;line-height:0.8;margin:0.1rem 0.15rem 0 0;}
+  .historia-aside{padding:2rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);border-left:3px solid var(--gold);}
+  .aside-label{font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;}
+  .aside-fact{display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid var(--border);}
+  .aside-fact:last-child{border-bottom:none;}
+  .aside-key{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);}
+  .aside-val{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text);}
+  .gallery-section{background:var(--bg2);}
+  .gallery-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:1rem;}
+  .g-main{grid-column:1/8;aspect-ratio:4/3;}
+  .g-sub1{grid-column:8/13;aspect-ratio:16/9;margin-bottom:0.5rem;}
+  .g-sub2{grid-column:8/13;aspect-ratio:16/9;}
+  .gallery-item{border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;transition:transform var(--transition),box-shadow var(--transition);}
+  .gallery-item:hover{transform:scale(1.015);box-shadow:0 16px 40px rgba(0,0,0,0.4);}
+  .ph{width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.75rem;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;min-height:180px;}
+  .ph svg{opacity:0.2;}
+  .gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.5s;}
+  .gallery-item:hover img{transform:scale(1.04);}
+  .specs-section{background:var(--bg);}
+  .specs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:2rem;}
+  .spec-cell{background:var(--bg2);padding:1.5rem 1.25rem;transition:background var(--transition);}
+  .spec-cell:hover{background:var(--bg3);}
+  .spec-val{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:500;color:var(--text);margin-bottom:0.35rem;}
+  .spec-key{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--text3);}
+  .details-list{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .detail-row{display:flex;justify-content:space-between;padding:0.9rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg2);transition:background var(--transition);}
+  .detail-row:hover{background:var(--bg3);}
+  .detail-row:nth-child(even){background:var(--bg3);}
+  .detail-key{font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);}
+  .detail-val{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text);}
+  .lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.93);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;padding:1rem;}
+  .lightbox.open{opacity:1;pointer-events:all;}
+  .lightbox-inner{position:relative;max-width:1000px;width:100%;}
+  .lightbox-img{width:100%;max-height:75vh;object-fit:contain;border-radius:var(--radius-lg);display:block;background:var(--bg2);}
+  .lightbox-caption{margin-top:1rem;font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;color:rgba(255,255,255,0.5);text-align:center;}
+  .lightbox-close{position:absolute;top:-3rem;right:0;background:none;border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;transition:border-color var(--transition);}
+  .lightbox-close:hover{border-color:var(--gold);color:var(--gold);}
+  .lb-arrows{position:absolute;top:38%;left:0;right:0;display:flex;justify-content:space-between;pointer-events:none;}
+  .lb-arrow{pointer-events:all;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);color:#fff;cursor:pointer;width:44px;height:44px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:border-color var(--transition);}
+  .lb-arrow.left{transform:translateX(-55%);}
+  .lb-arrow.right{transform:translateX(55%);}
+  .lb-arrow:hover{border-color:var(--gold);}
+  .lb-dots{display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;}
+  .lb-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;border:none;transition:background var(--transition);}
+  .lb-dot.active{background:var(--gold);}
+  footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+  .footer-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;color:var(--text);}
+  .footer-logo span{color:var(--gold);font-style:normal;}
+  .footer-back{font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);text-decoration:none;transition:color var(--transition);}
+  .footer-back:hover{color:var(--gold);}
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity 0.6s ease,transform 0.6s ease;}
+  .reveal.visible{opacity:1;transform:none;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important;}.hero-eyebrow,.hero-title,.hero-title-sub,.hero-specs,.hero-cta{opacity:1;}.reveal{opacity:1;transform:none;}}
+  @media(max-width:900px){.gallery-grid{grid-template-columns:1fr 1fr;}.g-main{grid-column:1/3;aspect-ratio:16/9;grid-row:1;}.g-sub1{grid-column:1;grid-row:2;}.g-sub2{grid-column:2;grid-row:2;}.details-list{grid-template-columns:1fr;}.historia-grid{grid-template-columns:1fr;gap:2.5rem;}}
+  @media(max-width:768px){.nav-links{display:none;}.nav-hamburger{display:block;}nav.menu-open .nav-links{display:flex;flex-direction:column;position:fixed;top:60px;left:0;right:0;background:var(--bg);padding:1.5rem 2rem 2rem;border-bottom:1px solid var(--border);gap:1.5rem;}.section{padding:4rem 1.25rem;}nav{padding:0 1.25rem;}footer{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<nav id="navbar">
+  <div class="nav-left">
+    <a class="nav-back" href="index.html">← Início</a>
+    <div class="nav-sep"></div>
+    <a class="nav-logo" href="#">Garage<span>.</span>One</a>
+  </div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#historia" onclick="closeMenu()">História</a></li>
+    <li><a href="#galeria" onclick="closeMenu()">Galeria</a></li>
+    <li><a href="#ficha" onclick="closeMenu()">Ficha técnica</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Mudar tema">☀</button>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-backdrop"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">// Automóvel Clássico · Coleção Privada</p>
+    <h1 class="hero-title">Citroën<br>Méhari</h1>
+    <p class="hero-title-sub">Verde Montana · 1968–1987</p>
+    <div class="hero-specs">
+      <div class="hero-spec"><div class="hero-spec-val">602cc</div><div class="hero-spec-key">Motor</div></div>
+      <div class="hero-spec"><div class="hero-spec-val">~29cv</div><div class="hero-spec-key">Potência</div></div>
+      <div class="hero-spec"><div class="hero-spec-val">~570kg</div><div class="hero-spec-key">Peso</div></div>
+      <div class="hero-spec"><div class="hero-spec-val">100km/h</div><div class="hero-spec-key">Vel. máx.</div></div>
+    </div>
+    <div class="hero-cta">
+      <a href="#galeria" class="btn btn-primary">Ver galeria</a>
+      <a href="#historia" class="btn btn-ghost">A história</a>
+    </div>
+  </div>
+  <div class="hero-scroll">scroll</div>
+</section>
+
+<section class="section" id="historia">
+  <div class="section-inner">
+    <p class="section-label reveal">História</p>
+    <h2 class="section-title reveal">A Besta do Plástico</h2>
+    <div class="historia-grid reveal">
+      <div class="historia-text">
+        <p>O Citroën Méhari não foi criado pela Citroën. Foi criado pelo Conde Roland de la Poype — piloto de guerra, industrial do plástico e visionário. Em 1967, a sua empresa SEAB desenvolveu um veículo de plástico ABS sobre a plataforma do Dyane 6. A Citroën ficou tão impressionada que comprou o projeto inteiro e apresentou-o ao mundo em maio de 1968, no campo de golfe de Deauville.</p>
+        <p>A carroçaria de plástico ABS colorido na massa era uma revolução: imune à ferrugem, extremamente leve, e com uma modularidade única — as portas eram amovíveis, o para-brisas rebatia sobre o capot, a capota enrolava. Era o único carro do mundo que podia ser lavado com uma mangueira por dentro e por fora.</p>
+        <p>O verde deste exemplar corresponde ao "Verde Montana", uma das três cores originais de lançamento em 1968, a par do vermelho Hopi e do beje Kalahari. Com 20.000 unidades fabricadas na fábrica de Mangualde, em Portugal, o Méhari tem uma ligação especial com este país.</p>
+      </div>
+      <div class="historia-aside">
+        <div class="aside-label">Curiosidades</div>
+        <div class="aside-fact"><span class="aside-key">Fabricado em Portugal</span><span class="aside-val">20.000 unidades · Mangualde</span></div>
+        <div class="aside-fact"><span class="aside-key">Total produzido</span><span class="aside-val">144.953 unidades</span></div>
+        <div class="aside-fact"><span class="aside-key">Exército francês</span><span class="aside-val">7.064 unidades militares</span></div>
+        <div class="aside-fact"><span class="aside-key">Carroçaria</span><span class="aside-val">Plástico ABS anti-ferrugem</span></div>
+        <div class="aside-fact"><span class="aside-key">Nome</span><span class="aside-val">Dromedário da Ásia Central</span></div>
+        <div class="aside-fact"><span class="aside-key">Anos de produção</span><span class="aside-val">1968 — 1987 (19 anos)</span></div>
+        <div class="aside-fact"><span class="aside-key">Base mecânica</span><span class="aside-val">Citroën Dyane 6 / 2CV</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section gallery-section" id="galeria">
+  <div class="section-inner">
+    <p class="section-label reveal">Galeria</p>
+    <h2 class="section-title reveal">Verde Montana</h2>
+    <div class="gallery-grid">
+      <div class="gallery-item g-main" onclick="openLb(0)">
+        <div class="ph">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Vista frontal</span>
+        </div>
+      </div>
+      <div class="gallery-item g-sub1" onclick="openLb(1)">
+        <div class="ph">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Vista lateral</span>
+        </div>
+      </div>
+      <div class="gallery-item g-sub2" onclick="openLb(2)">
+        <div class="ph">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Interior / tablier</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section specs-section" id="ficha">
+  <div class="section-inner">
+    <p class="section-label reveal">Ficha técnica</p>
+    <h2 class="section-title reveal">Especificações</h2>
+    <div class="specs-grid reveal">
+      <div class="spec-cell"><div class="spec-val">602cc</div><div class="spec-key">Cilindrada</div></div>
+      <div class="spec-cell"><div class="spec-val">~29cv</div><div class="spec-key">Potência</div></div>
+      <div class="spec-cell"><div class="spec-val">2 cilindros</div><div class="spec-key">Configuração</div></div>
+      <div class="spec-cell"><div class="spec-val">Ar</div><div class="spec-key">Arrefecimento</div></div>
+      <div class="spec-cell"><div class="spec-val">~570kg</div><div class="spec-key">Peso</div></div>
+      <div class="spec-cell"><div class="spec-val">~100km/h</div><div class="spec-key">Velocidade máx.</div></div>
+    </div>
+    <div class="details-list reveal">
+      <div class="detail-row"><span class="detail-key">Marca</span><span class="detail-val">Citroën</span></div>
+      <div class="detail-row"><span class="detail-key">Modelo</span><span class="detail-val">Méhari</span></div>
+      <div class="detail-row"><span class="detail-key">Carroçaria</span><span class="detail-val">Plástico ABS</span></div>
+      <div class="detail-row"><span class="detail-key">Base mecânica</span><span class="detail-val">Dyane 6 / 2CV</span></div>
+      <div class="detail-row"><span class="detail-key">Cor</span><span class="detail-val">Verde Montana</span></div>
+      <div class="detail-row"><span class="detail-key">Transmissão</span><span class="detail-val">Manual 4 velocidades</span></div>
+      <div class="detail-row"><span class="detail-key">Tração</span><span class="detail-val">Dianteira (FWD)</span></div>
+      <div class="detail-row"><span class="detail-key">Combustível</span><span class="detail-val">Gasolina</span></div>
+      <div class="detail-row"><span class="detail-key">Lugares</span><span class="detail-val">4</span></div>
+      <div class="detail-row"><span class="detail-key">Depósito</span><span class="detail-val">25 litros</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Garage<span>.</span>One</div>
+  <a class="footer-back" href="index.html">← Voltar ao início</a>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lbClose">✕</button>
+    <div class="lb-arrows">
+      <button class="lb-arrow left" id="lbPrev">‹</button>
+      <button class="lb-arrow right" id="lbNext">›</button>
+    </div>
+    <img class="lightbox-img" id="lbImg" src="" alt="">
+    <p class="lightbox-caption" id="lbCap"></p>
+    <div class="lb-dots" id="lbDots"></div>
+  </div>
+</div>
+
+<script>
+const fotos=[
+  {src:"",label:"Vista frontal"},
+  {src:"",label:"Vista lateral"},
+  {src:"",label:"Interior / tablier"}
+];
+let lbIdx=0;
+function ph(label){return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><rect fill='%231B2317' width='800' height='500'/><text x='50%25' y='44%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%234D5E45' letter-spacing='3'>${encodeURIComponent(label.toUpperCase())}</text><text x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='10' fill='%23334428' letter-spacing='2'>FOTO AQUI</text></svg>`;}
+function openLb(i){lbIdx=i;renderLb();document.getElementById('lightbox').classList.add('open');document.body.style.overflow='hidden';}
+function renderLb(){const f=fotos[lbIdx];document.getElementById('lbImg').src=f.src||ph(f.label);document.getElementById('lbCap').textContent=f.label;document.getElementById('lbDots').innerHTML=fotos.map((_,i)=>`<button class="lb-dot ${i===lbIdx?'active':''}" onclick="goLb(${i})"></button>`).join('');}
+function goLb(i){lbIdx=(i+fotos.length)%fotos.length;renderLb();}
+document.getElementById('lbClose').onclick=()=>{document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';};
+document.getElementById('lbPrev').onclick=()=>goLb(lbIdx-1);
+document.getElementById('lbNext').onclick=()=>goLb(lbIdx+1);
+document.getElementById('lightbox').addEventListener('click',e=>{if(e.target===document.getElementById('lightbox')){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';}});
+document.addEventListener('keydown',e=>{const lb=document.getElementById('lightbox');if(!lb.classList.contains('open'))return;if(e.key==='ArrowLeft')goLb(lbIdx-1);if(e.key==='ArrowRight')goLb(lbIdx+1);if(e.key==='Escape'){lb.classList.remove('open');document.body.style.overflow='';}});
+let dark=true;
+document.getElementById('themeToggle').addEventListener('click',()=>{dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeToggle').textContent=dark?'☀':'☾';});
+const hamburger=document.getElementById('hamburger');const navbar=document.getElementById('navbar');
+hamburger.addEventListener('click',()=>navbar.classList.toggle('menu-open'));
+function closeMenu(){navbar.classList.remove('menu-open');}
+const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');}),{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
