@@ -509,7 +509,7 @@ function openEditor(id) {
       <div class="photos-grid" id="photosGrid"></div>
       <div class="upload-zone" id="uploadZone">
         <p>Clica ou arrasta fotos para aqui</p>
-        <span>JPG, PNG, WEBP · máx. 5MB cada</span>
+        <span>JPG, PNG, WEBP · máx. 15MB · compressão automática</span>
         <div class="upload-progress" id="uploadProgress">
           <div class="upload-progress-bar" id="uploadBar"></div>
         </div>
@@ -690,6 +690,31 @@ async function saveItem() {
 }
 
 // ── FOTOS ────────────────────────────────────────────────────────────────────
+
+// Comprime uma imagem para máx. 1920px e qualidade 85% — devolve um Blob JPEG
+function compressImage(file) {
+  return new Promise((resolve) => {
+    const MAX_PX = 1920;
+    const QUALITY = 0.85;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > MAX_PX || height > MAX_PX) {
+        if (width >= height) { height = Math.round(height * MAX_PX / width); width = MAX_PX; }
+        else { width = Math.round(width * MAX_PX / height); height = MAX_PX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => resolve(blob), 'image/jpeg', QUALITY);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 async function handleFiles(files) {
   const arr = Array.from(files).filter(f => f.type.startsWith('image/'));
   if (!arr.length) return;
@@ -703,11 +728,13 @@ async function handleFiles(files) {
   let uploaded = 0;
 
   for (const file of arr) {
-    if (file.size > 5 * 1024 * 1024) { toast(`${file.name} demasiado grande (máx 5MB)`, 'err'); continue; }
+    if (file.size > 15 * 1024 * 1024) { toast(`${file.name} demasiado grande (máx 15MB)`, 'err'); continue; }
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${currentId}/${Date.now()}-${Math.random().toString(36).substr(2,6)}.${ext}`;
-      const { data, error } = await sb.storage.from('veiculos-fotos').upload(path, file, { upsert: false });
+      toast(`A comprimir ${file.name}…`, 'info');
+      const compressed = await compressImage(file);
+      const sizeMB = (compressed.size / 1024 / 1024).toFixed(1);
+      const path = `${currentId}/${Date.now()}-${Math.random().toString(36).substr(2,6)}.jpg`;
+      const { error } = await sb.storage.from('veiculos-fotos').upload(path, compressed, { contentType: 'image/jpeg', upsert: false });
       if (error) throw error;
       const publicUrl = `${sbUrl}/storage/v1/object/public/veiculos-fotos/${path}`;
       if (!pendingChanges.fotos) pendingChanges.fotos = [];
@@ -716,12 +743,12 @@ async function handleFiles(files) {
       bar.style.width = Math.round((uploaded / arr.length) * 100) + '%';
       renderPhotosGrid(pendingChanges.fotos);
       updatePreview();
+      toast(`${file.name} carregada (${sizeMB}MB)`, 'ok');
     } catch (e) {
       toast(`Erro ao carregar ${file.name}: ${e.message}`, 'err');
     }
   }
   setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%'; }, 1000);
-  if (uploaded) toast(`${uploaded} foto(s) carregada(s)`, 'ok');
 }
 
 function removePhoto(idx) {
