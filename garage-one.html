@@ -280,9 +280,8 @@ let lbIdx = 0;
 function ph(label){return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><rect fill='%231B2317' width='800' height='500'/><text x='50%25' y='44%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%234D5E45' letter-spacing='3'>${encodeURIComponent(label.toUpperCase())}</text><text x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='10' fill='%23334428' letter-spacing='2'>FOTO AQUI</text></svg>`;}
 
 async function loadFromSupabase() {
-  const url = localStorage.getItem('sb_url');
-  const key = localStorage.getItem('sb_key');
-  if (!url || !key) return;
+  const url = localStorage.getItem('sb_url') || 'https://knfkhtpcoopkicyyexgk.supabase.co';
+  const key = localStorage.getItem('sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZmtodHBjb29wa2ljeXlleGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3OTc1MDcsImV4cCI6MjA5NTM3MzUwN30.uFJEy4G1DRq-QgdSUn8zJArm-DwPDsegvpk5dIAGSHM';
   try {
     const res = await fetch(`${url}/rest/v1/veiculos?select=nome,ano,motor,potencia,peso,descricao,fotos&tipo=eq.carro&order=ordem.asc&limit=1`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` }
