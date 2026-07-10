@@ -201,7 +201,7 @@
   <div class="section-inner">
     <p class="section-label reveal">Galeria</p>
     <h2 class="section-title reveal">Verde Montana</h2>
-    <div class="gallery-grid">
+    <div class="gallery-grid" id="galleryGrid">
       <div class="gallery-item g-main" onclick="openLb(0)">
         <div class="ph">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
@@ -270,21 +270,87 @@
 </div>
 
 <script>
-const fotos=[
-  {src:"",label:"Vista frontal"},
-  {src:"",label:"Vista lateral"},
-  {src:"",label:"Interior / tablier"}
+let fotos = [
+  {src:'', label:'Vista frontal'},
+  {src:'', label:'Vista lateral'},
+  {src:'', label:'Interior / tablier'}
 ];
-let lbIdx=0;
+let lbIdx = 0;
+
 function ph(label){return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><rect fill='%231B2317' width='800' height='500'/><text x='50%25' y='44%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%234D5E45' letter-spacing='3'>${encodeURIComponent(label.toUpperCase())}</text><text x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='10' fill='%23334428' letter-spacing='2'>FOTO AQUI</text></svg>`;}
-function openLb(i){lbIdx=i;renderLb();document.getElementById('lightbox').classList.add('open');document.body.style.overflow='hidden';}
-function renderLb(){const f=fotos[lbIdx];document.getElementById('lbImg').src=f.src||ph(f.label);document.getElementById('lbCap').textContent=f.label;document.getElementById('lbDots').innerHTML=fotos.map((_,i)=>`<button class="lb-dot ${i===lbIdx?'active':''}" onclick="goLb(${i})"></button>`).join('');}
-function goLb(i){lbIdx=(i+fotos.length)%fotos.length;renderLb();}
+
+async function loadFromSupabase() {
+  const url = localStorage.getItem('sb_url');
+  const key = localStorage.getItem('sb_key');
+  if (!url || !key) return;
+  try {
+    const res = await fetch(`${url}/rest/v1/veiculos?select=nome,ano,motor,potencia,peso,descricao,fotos&tipo=eq.carro&order=ordem.asc&limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.length) return;
+    const v = data[0];
+    const sbFotos = Array.isArray(v.fotos) ? v.fotos : (v.fotos ? JSON.parse(v.fotos) : []);
+    if (sbFotos.length) {
+      fotos = sbFotos.map((src, i) => ({ src, label: ['Vista frontal','Vista lateral','Interior / tablier'][i] || `Foto ${i+1}` }));
+      renderGallery();
+    }
+    // hero specs
+    if (v.motor) document.getElementById('hs1').textContent = v.motor;
+    if (v.potencia) document.getElementById('hs2').textContent = v.potencia;
+    if (v.peso) document.getElementById('hs4').textContent = v.peso;
+  } catch(e) { console.warn('Supabase:', e); }
+}
+
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  const classes = ['g-main', 'g-sub1', 'g-sub2'];
+  const sizes = [40, 32, 32];
+  grid.innerHTML = fotos.slice(0, 3).map((f, i) => `
+    <div class="gallery-item ${classes[i]}" onclick="openLb(${i})">
+      ${f.src
+        ? `<img src="${f.src}" alt="${f.label}" style="width:100%;height:100%;object-fit:cover;display:block;">`
+        : `<div class="ph">
+            <svg width="${sizes[i]}" height="${sizes[i]}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span>${f.label}</span>
+           </div>`}
+    </div>`).join('');
+  // se tiver mais de 3 fotos adiciona linha extra
+  if (fotos.length > 3) {
+    const extra = document.createElement('div');
+    extra.style.cssText = 'grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem;';
+    extra.innerHTML = fotos.slice(3).map((f,i) => `
+      <div class="gallery-item" style="aspect-ratio:4/3;" onclick="openLb(${i+3})">
+        <img src="${f.src}" alt="${f.label}" style="width:100%;height:100%;object-fit:cover;display:block;">
+      </div>`).join('');
+    grid.appendChild(extra);
+  }
+}
+
+function openLb(i){ lbIdx=i; renderLb(); document.getElementById('lightbox').classList.add('open'); document.body.style.overflow='hidden'; }
+function renderLb(){
+  const f = fotos[lbIdx] || fotos[0];
+  document.getElementById('lbImg').src = f.src || ph(f.label);
+  document.getElementById('lbCap').textContent = f.label;
+  document.getElementById('lbDots').innerHTML = fotos.map((_,i) =>
+    `<button class="lb-dot ${i===lbIdx?'active':''}" onclick="goLb(${i})"></button>`
+  ).join('');
+}
+function goLb(i){ lbIdx=(i+fotos.length)%fotos.length; renderLb(); }
+
 document.getElementById('lbClose').onclick=()=>{document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';};
 document.getElementById('lbPrev').onclick=()=>goLb(lbIdx-1);
 document.getElementById('lbNext').onclick=()=>goLb(lbIdx+1);
 document.getElementById('lightbox').addEventListener('click',e=>{if(e.target===document.getElementById('lightbox')){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';}});
-document.addEventListener('keydown',e=>{const lb=document.getElementById('lightbox');if(!lb.classList.contains('open'))return;if(e.key==='ArrowLeft')goLb(lbIdx-1);if(e.key==='ArrowRight')goLb(lbIdx+1);if(e.key==='Escape'){lb.classList.remove('open');document.body.style.overflow='';}});
+document.addEventListener('keydown',e=>{
+  const lb=document.getElementById('lightbox');
+  if(!lb.classList.contains('open'))return;
+  if(e.key==='ArrowLeft')goLb(lbIdx-1);
+  if(e.key==='ArrowRight')goLb(lbIdx+1);
+  if(e.key==='Escape'){lb.classList.remove('open');document.body.style.overflow='';}
+});
+
 let dark=true;
 document.getElementById('themeToggle').addEventListener('click',()=>{dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeToggle').textContent=dark?'☀':'☾';});
 const hamburger=document.getElementById('hamburger');const navbar=document.getElementById('navbar');
@@ -292,6 +358,8 @@ hamburger.addEventListener('click',()=>navbar.classList.toggle('menu-open'));
 function closeMenu(){navbar.classList.remove('menu-open');}
 const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');}),{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+loadFromSupabase();
 </script>
 </body>
 </html>
