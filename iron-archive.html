@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iron Archive — Coleção de Motos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="theme-color" content="#0E0E0E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Iron Archive">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -252,18 +259,20 @@ function phImg(name) {
 
 // Converte registo Supabase para formato da página
 function mapVeiculo(v) {
+  const fotos = Array.isArray(v.fotos) ? v.fotos : (v.fotos ? JSON.parse(v.fotos) : []);
+  const tag = v.tag || 'Vintage';
   return {
     id: v.id,
-    name: v.nome,
+    name: v.nome || 'Sem nome',
     year: v.ano || 0,
     brand: v.marca || '—',
-    type: v.tag && v.tag.toLowerCase().includes('modern') ? 'modern' : 'vintage',
+    type: tag.toLowerCase().includes('modern') ? 'modern' : 'vintage',
     engine: v.motor || '—',
     power: v.potencia || '—',
     weight: v.peso || '—',
-    tag: v.tag || 'Vintage',
-    img: (v.fotos && v.fotos[0]) || '',
-    fotos: v.fotos || [],
+    tag: tag,
+    img: fotos[0] || '',
+    fotos: fotos,
     desc: v.descricao || ''
   };
 }
@@ -273,7 +282,7 @@ async function loadFromSupabase() {
   const key = localStorage.getItem('sb_key');
   if (!url || !key) return false;
   try {
-    const res = await fetch(`${url}/rest/v1/veiculos?select=*&tipo=eq.moto&order=ordem.asc`, {
+    const res = await fetch(`${url}/rest/v1/veiculos?select=id,ordem,tipo,nome,marca,ano,motor,potencia,peso,tag,descricao,fotos&order=ordem.asc`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` }
     });
     if (!res.ok) return false;
