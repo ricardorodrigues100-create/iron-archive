@@ -86,8 +86,8 @@
   .moto-card.visible{opacity:1;transform:translateY(0);transition:opacity 0.5s ease,transform 0.5s ease,border-color var(--transition),box-shadow var(--transition);}
   .moto-card:hover{border-color:var(--accent2);transform:translateY(-5px);box-shadow:0 20px 40px rgba(0,0,0,0.3);}
   .moto-img-wrap{overflow:hidden;position:relative;}
-  .moto-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--surface);transition:transform 0.5s ease;}
-  .moto-card:hover .moto-img{transform:scale(1.04);}
+  .moto-img{width:100%;display:block;background:var(--surface);transition:transform 0.5s ease;max-height:480px;object-fit:contain;}
+  .moto-card:hover .moto-img{transform:scale(1.02);}
   .moto-tag{position:absolute;top:0.75rem;left:0.75rem;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.3rem 0.6rem;border-radius:2px;background:var(--accent);color:#fff;}
   .moto-tag.modern{background:var(--accent2);}
   .moto-tag.wip{background:#6B4E1A;}
