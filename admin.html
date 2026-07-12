@@ -157,7 +157,78 @@ input,textarea,select{font-family:var(--font);font-size:14px;}
 .btn-crop-cancel{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);padding:0.5rem 1rem;font-size:0.8rem;cursor:pointer;}
 .btn-crop-ok{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:0.5rem 1.25rem;font-size:0.8rem;font-weight:600;cursor:pointer;}
 
-/* ── TOAST ───────────────────────────────────────────────────────────────── */
+/* ── MOBILE ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* topbar compacta */
+  .topbar { padding: 0 0.75rem; height: 48px; }
+  .topbar-brand { font-size: 0.62rem; }
+  .topbar-right { gap: 0.5rem; }
+  .topbar-right > div { display: none; } /* esconde link do site */
+  #syncBtn { display: none; }
+  .topbar-status { font-size: 0.55rem; }
+  .btn-sm { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
+
+  /* layout mobile: ecrã completo para lista ou editor */
+  #app { height: 100dvh; }
+  .main { position: relative; overflow: hidden; }
+  .sidebar {
+    width: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    transition: transform 0.3s ease;
+  }
+  .sidebar.hidden { transform: translateX(-100%); }
+  .editor {
+    width: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    padding: 1rem;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: block !important;
+    overflow-y: auto;
+  }
+  .editor.active { transform: translateX(0); }
+  .empty-state { display: none !important; }
+
+  /* botão voltar no editor mobile */
+  .mobile-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    padding: 0;
+  }
+  .mobile-back:hover { color: var(--accent); }
+
+  /* editor fields 1 coluna */
+  .editor-grid { grid-template-columns: 1fr !important; }
+  .editor-header { flex-direction: column; gap: 0.75rem; }
+  .header-actions { width: 100%; justify-content: space-between; }
+  .btn-save { flex: 1; }
+
+  /* fotos tap em vez de hover */
+  .photo-slot .ph-overlay { opacity: 1; background: rgba(0,0,0,0.35); }
+
+  /* preview menor */
+  .preview-card { max-width: 100%; }
+
+  /* upload zone */
+  .upload-zone { padding: 1.5rem 1rem; }
+}
+@media (min-width: 769px) {
+  .mobile-back { display: none; }
+}
 #toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:0.5rem;}
 .toast-msg{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:0.65rem 1rem;font-size:0.78rem;color:var(--text);display:flex;align-items:center;gap:0.6rem;animation:slideIn 0.2s ease;min-width:220px;}
 .toast-msg.ok{border-left:3px solid var(--green);}
@@ -540,6 +611,8 @@ async function saveOrder() {
 }
 
 // ── EDITOR ───────────────────────────────────────────────────────────────────
+function isMobile() { return window.innerWidth <= 768; }
+
 function openEditor(id) {
   currentId = id;
   const v = veiculos.find(x => x.id === id);
@@ -551,7 +624,13 @@ function openEditor(id) {
   editor.classList.add('active');
   editor.style.display = 'block';
 
+  // mobile: esconde sidebar, mostra editor
+  if (isMobile()) {
+    document.querySelector('.sidebar').classList.add('hidden');
+  }
+
   editor.innerHTML = `
+    <button class="mobile-back" id="mobileBack">← Lista</button>
     <div class="editor-header">
       <div>
         <div class="editor-title" id="edTitle">${v.nome || 'Sem nome'}</div>
@@ -632,7 +711,18 @@ function openEditor(id) {
 
   renderPhotosGrid(v.fotos || []);
   bindEditorEvents(v);
-  renderSidebar(); // refresh active state
+
+  // botão voltar mobile
+  const mobileBackBtn = document.getElementById('mobileBack');
+  if (mobileBackBtn) {
+    mobileBackBtn.addEventListener('click', () => {
+      document.querySelector('.sidebar').classList.remove('hidden');
+      editor.classList.remove('active');
+      currentId = null;
+    });
+  }
+
+  renderSidebar();
 }
 
 function esc(s) { return s ? String(s).replace(/"/g, '&quot;').replace(/</g,'&lt;') : ''; }
