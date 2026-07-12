@@ -353,16 +353,19 @@ create policy "Auth upload" on storage.objects
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-// MUDA AQUI A TUA PASSWORD DE ADMIN:
 const ADMIN_PASSWORD = 'Portugal2026';
 
 // ── SUPABASE ─────────────────────────────────────────────────────────────────
+const SB_URL = 'https://knfkhtpcoopkicyyexgk.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZmtodHBjb29wa2ljeXlleGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3OTc1MDcsImV4cCI6MjA5NTM3MzUwN30.uFJEy4G1DRq-QgdSUn8zJArm-DwPDsegvpk5dIAGSHM';
 let sb = null;
 
 function loadSupabase() {
-  const url = localStorage.getItem('sb_url');
-  const key = localStorage.getItem('sb_key');
-  if (!url || !key) return false;
+  const url = localStorage.getItem('sb_url') || SB_URL;
+  const key = localStorage.getItem('sb_key') || SB_KEY;
+  // guardar no localStorage para compatibilidade com upload de fotos
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
   sb = supabase.createClient(url, key);
   return true;
 }
@@ -376,10 +379,8 @@ let dragSrcIdx = null;
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  const hasSupa = loadSupabase();
+  loadSupabase();
   const isLogged = sessionStorage.getItem('admin_ok') === '1';
-
-  if (!hasSupa) { showSetup(); return; }
   if (isLogged) { showApp(); return; }
   showLogin();
 });
