@@ -205,19 +205,19 @@
       <div class="gallery-item g-main" onclick="openLb(0)">
         <div class="ph">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>Vista frontal</span>
+          <span>Foto 1</span>
         </div>
       </div>
       <div class="gallery-item g-sub1" onclick="openLb(1)">
         <div class="ph">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>Vista lateral</span>
+          <span>Foto 2</span>
         </div>
       </div>
       <div class="gallery-item g-sub2" onclick="openLb(2)">
         <div class="ph">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          <span>Interior / tablier</span>
+          <span>Foto 3</span>
         </div>
       </div>
     </div>
@@ -292,7 +292,7 @@ async function loadFromSupabase() {
     const v = data[0];
     const sbFotos = Array.isArray(v.fotos) ? v.fotos : (v.fotos ? JSON.parse(v.fotos) : []);
     if (sbFotos.length) {
-      fotos = sbFotos.map((src, i) => ({ src, label: ['Vista frontal','Vista lateral','Interior / tablier'][i] || `Foto ${i+1}` }));
+      fotos = sbFotos.map((src, i) => ({ src, label: `Foto ${i+1}` }));
       renderGallery();
     }
     // hero specs
