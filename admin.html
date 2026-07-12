@@ -650,8 +650,8 @@ function renderPhotosGrid(fotos) {
       ${i === 0 ? '<span class="photo-primary-badge">Capa</span>' : ''}
       <img src="${url}" alt="foto ${i+1}">
       <div class="ph-overlay">
-        ${i > 0 ? `<button class="ph-btn" onclick="movePhotoLeft(${i})">← Capa</button>` : ''}
-        <button class="ph-btn del" onclick="removePhoto(${i})">✕</button>
+        <button class="ph-btn" onclick="previewPhoto('${url}')" title="Ver foto">🔍</button>
+        <button class="ph-btn del" onclick="removePhoto(${i})" title="Remover">✕</button>
       </div>`;
     grid.appendChild(slot);
   });
@@ -899,6 +899,20 @@ function removePhoto(idx) {
   pendingChanges.fotos.splice(idx, 1);
   renderPhotosGrid(pendingChanges.fotos);
   updatePreview();
+}
+
+function previewPhoto(url) {
+  let lb = document.getElementById('adminLightbox');
+  if (!lb) {
+    lb = document.createElement('div');
+    lb.id = 'adminLightbox';
+    lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:400;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:1rem;';
+    lb.innerHTML = '<img style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:8px;" alt="preview"><button style="position:absolute;top:1rem;right:1rem;background:none;border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:4px;font-size:1rem;cursor:pointer;">✕</button>';
+    lb.addEventListener('click', () => lb.remove());
+    document.body.appendChild(lb);
+  }
+  lb.querySelector('img').src = url;
+  document.body.appendChild(lb);
 }
 
 function movePhotoLeft(idx) {
