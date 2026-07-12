@@ -265,6 +265,12 @@ create policy "Auth upload" on storage.objects
   <div class="topbar">
     <div class="topbar-brand">IRON<span>.</span>ARCHIVE <span style="color:var(--text3)">/admin</span></div>
     <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:0.4rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0.3rem 0.6rem;">
+        <a href="https://iron-archive-eight.vercel.app" target="_blank" style="font-family:var(--mono);font-size:0.62rem;color:var(--text2);text-decoration:none;letter-spacing:0.05em;" title="Abrir site">iron-archive-eight.vercel.app</a>
+        <button id="copyLink" title="Copiar link" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:0.1rem 0.25rem;font-size:0.75rem;transition:color var(--transition);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
       <span class="topbar-status" id="dbStatus">A ligar…</span>
       <button class="btn-sm" id="syncBtn">↻ Sincronizar</button>
       <button class="btn-sm danger" id="logoutBtn">Sair</button>
@@ -423,6 +429,16 @@ function doLogin() {
     document.getElementById('pwInput').value = '';
   }
 }
+document.getElementById('copyLink').addEventListener('click', () => {
+  navigator.clipboard.writeText('https://iron-archive-eight.vercel.app').then(() => {
+    const btn = document.getElementById('copyLink');
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    }, 2000);
+  });
+});
+
 document.getElementById('logoutBtn').addEventListener('click', () => {
   sessionStorage.removeItem('admin_ok');
   showLogin();
