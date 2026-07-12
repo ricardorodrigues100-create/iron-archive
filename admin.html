@@ -320,14 +320,15 @@ create policy "Auth upload" on storage.objects
     <div class="login-title">Acesso restrito</div>
     <div class="login-sub">Painel de gestão da coleção</div>
     <div class="field">
+      <label>Email</label>
+      <input type="email" id="emailInput" placeholder="o teu email" autocomplete="email">
+    </div>
+    <div class="field">
       <label>Password</label>
       <input type="password" id="pwInput" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn-login" id="loginBtn">Entrar</button>
-    <div class="login-error" id="loginError">Password incorreta.</div>
-    <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1rem;">
-      <button class="btn-sm" id="showSetup" style="font-size:0.7rem;color:var(--text3);border:none;padding:0;">⚙ Reconfigurar Supabase</button>
-    </div>
+    <div class="login-error" id="loginError">Email ou password incorretos.</div>
   </div>
 </div>
 
@@ -424,20 +425,15 @@ create policy "Auth upload" on storage.objects
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-const ADMIN_PASSWORD = 'Portugal2026';
-
 // ── SUPABASE ─────────────────────────────────────────────────────────────────
 const SB_URL = 'https://knfkhtpcoopkicyyexgk.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZmtodHBjb29wa2ljeXlleGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3OTc1MDcsImV4cCI6MjA5NTM3MzUwN30.uFJEy4G1DRq-QgdSUn8zJArm-DwPDsegvpk5dIAGSHM';
 let sb = null;
 
 function loadSupabase() {
-  const url = localStorage.getItem('sb_url') || SB_URL;
-  const key = localStorage.getItem('sb_key') || SB_KEY;
-  // guardar no localStorage para compatibilidade com upload de fotos
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  sb = supabase.createClient(url, key);
+  localStorage.setItem('sb_url', SB_URL);
+  localStorage.setItem('sb_key', SB_KEY);
+  sb = supabase.createClient(SB_URL, SB_KEY);
   return true;
 }
 
@@ -449,56 +445,48 @@ let pendingChanges = {};
 let dragSrcIdx = null;
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
   loadSupabase();
-  const isLogged = sessionStorage.getItem('admin_ok') === '1';
-  if (isLogged) { showApp(); return; }
+  // verificar sessão existente
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { showApp(); return; }
   showLogin();
 });
 
-function showSetup() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('setupScreen').style.display = 'flex';
-  document.getElementById('app').classList.remove('active');
-}
+function showSetup() { showLogin(); } // setup já não existe
 function showLogin() {
-  document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').classList.remove('active');
+  setTimeout(() => document.getElementById('emailInput')?.focus(), 100);
 }
 function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('app').classList.add('active');
   initApp();
 }
 
-// ── SETUP ────────────────────────────────────────────────────────────────────
-document.getElementById('setupSave').addEventListener('click', () => {
-  const url = document.getElementById('setupUrl').value.trim();
-  const key = document.getElementById('setupKey').value.trim();
-  if (!url || !key) { toast('Preenche os dois campos.', 'err'); return; }
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  loadSupabase();
-  showLogin();
-  toast('Configuração guardada!', 'ok');
-});
-document.getElementById('showSetup').addEventListener('click', showSetup);
-
-// ── LOGIN ────────────────────────────────────────────────────────────────────
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('emailInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pwInput').focus(); });
 
-function doLogin() {
+async function doLogin() {
+  const email = document.getElementById('emailInput').value.trim();
   const pw = document.getElementById('pwInput').value;
-  if (pw === ADMIN_PASSWORD) {
-    sessionStorage.setItem('admin_ok', '1');
-    document.getElementById('loginError').style.display = 'none';
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  btn.textContent = 'A entrar…';
+  btn.disabled = true;
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) throw error;
     showApp();
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-    document.getElementById('pwInput').value = '';
+  } catch (e) {
+    err.style.display = 'block';
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
   }
 }
 document.getElementById('copyLink').addEventListener('click', () => {
@@ -511,8 +499,8 @@ document.getElementById('copyLink').addEventListener('click', () => {
   });
 });
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  sessionStorage.removeItem('admin_ok');
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
   showLogin();
 });
 
