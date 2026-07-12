@@ -366,8 +366,8 @@ function openDetail(m){
   const src=m.img||phImg(m.name);
   document.getElementById('detailHeroImg').src=src;
   document.getElementById('detailHeroImg').alt=m.name;
-  document.getElementById('detailHeroImg').style.cursor='zoom-in';
-  document.getElementById('detailHeroImg').onclick = () => { if(m.img) openFsLb(m.img); };
+  document.getElementById('detailHeroImg').style.cursor='pointer';
+  document.getElementById('detailHeroImg').onclick = () => openLightbox(m);
   document.getElementById('detailEyebrow').textContent=`${m.brand} · ${m.year||'—'} · ${m.tag||m.type}`;
   document.getElementById('detailTitle').textContent=m.name;
   document.getElementById('detailDesc').textContent=m.desc;
