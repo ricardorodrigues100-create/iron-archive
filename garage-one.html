@@ -480,46 +480,51 @@ function openSlideshow() {
   ssSlides = fotos.map(f => ({ src: f.src, name: 'Citroën Méhari' })).filter(s => s.src);
   if (!ssSlides.length) return;
   ssIdx = 0; ssPaused = false;
+  document.getElementById('ssPause').textContent = '⏸';
   document.getElementById('slideshow').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   renderSs();
-  startSsTimer();
+  scheduleNext();
+}
+function scheduleNext() {
+  clearTimeout(ssTimer);
+  ssTimer = null;
+  if (!ssPaused) {
+    ssTimer = setTimeout(() => {
+      ssIdx = (ssIdx + 1) % ssSlides.length;
+      renderSs();
+      scheduleNext();
+    }, SS_INTERVAL);
+  }
 }
 function renderSs() {
   const s = ssSlides[ssIdx];
   const img = document.getElementById('ssImg');
   img.style.opacity = '0';
-  setTimeout(() => { img.src = s.src; img.style.opacity = '1'; }, 200);
+  setTimeout(() => { img.src = s.src; img.style.opacity = '1'; }, 150);
   document.getElementById('ssCaption').textContent = s.name;
   const prog = document.getElementById('ssProgress');
   prog.style.transition = 'none'; prog.style.width = '0%';
   setTimeout(() => { prog.style.transition = `width ${SS_INTERVAL}ms linear`; prog.style.width = '100%'; }, 50);
   document.getElementById('ssDots').innerHTML = ssSlides.map((_,i) =>
-    `<button onclick="ssGo(${i})" style="width:6px;height:6px;border-radius:50%;border:none;cursor:pointer;background:${i===ssIdx?'var(--gold)':'rgba(255,255,255,0.25)'};transition:background 0.3s;"></button>`
+    `<button onclick="ssGo(${i})" style="width:6px;height:6px;border-radius:50%;border:none;cursor:pointer;background:${i===ssIdx?'var(--gold)':'var(--border2)'};transition:background 0.3s;"></button>`
   ).join('');
 }
-function startSsTimer() {
-  clearInterval(ssTimer);
-  ssTimer = null;
-  if (!ssPaused) {
-    ssTimer = setInterval(() => {
-      ssIdx = (ssIdx + 1) % ssSlides.length;
-      renderSs();
-    }, SS_INTERVAL);
-  }
+function ssGo(i) {
+  clearTimeout(ssTimer); ssTimer = null;
+  ssIdx = ((i % ssSlides.length) + ssSlides.length) % ssSlides.length;
+  renderSs(); scheduleNext();
 }
-function ssGo(i) { ssIdx = ((i % ssSlides.length) + ssSlides.length) % ssSlides.length; renderSs(); startSsTimer(); }
-
 document.getElementById('ssClose').addEventListener('click', () => {
-  clearInterval(ssTimer);
+  clearTimeout(ssTimer); ssTimer = null;
   document.getElementById('slideshow').style.display = 'none';
   document.body.style.overflow = '';
 });
 document.getElementById('ssPause').addEventListener('click', () => {
   ssPaused = !ssPaused;
   document.getElementById('ssPause').textContent = ssPaused ? '▶' : '⏸';
-  if (ssPaused) { clearInterval(ssTimer); document.getElementById('ssProgress').style.transition = 'none'; }
-  else { startSsTimer(); const p = document.getElementById('ssProgress'); p.style.transition = `width ${SS_INTERVAL}ms linear`; p.style.width = '100%'; }
+  if (ssPaused) { clearTimeout(ssTimer); ssTimer = null; document.getElementById('ssProgress').style.transition = 'none'; }
+  else { scheduleNext(); }
 });
 let ssTouchX = 0;
 document.getElementById('slideshow').addEventListener('touchstart', e => { ssTouchX = e.touches[0].clientX; }, { passive: true });
