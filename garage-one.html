@@ -159,6 +159,9 @@
     <li><a href="#historia" onclick="closeMenu()">História</a></li>
     <li><a href="#galeria" onclick="closeMenu()">Galeria</a></li>
     <li><a href="#ficha" onclick="closeMenu()">Ficha técnica</a></li>
+    <li><button onclick="openSlideshow()" style="background:none;border:none;font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text2);cursor:pointer;padding:0;transition:color var(--transition);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'" title="Slideshow">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button></li>
   </ul>
   <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" aria-label="Mudar tema">☀</button>
@@ -269,6 +272,15 @@
   <div class="footer-logo">Garage<span>.</span>One</div>
   <a class="footer-back" href="index.html">← Voltar ao início</a>
 </footer>
+
+<div id="slideshow" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;align-items:center;justify-content:center;transition:background var(--transition);">
+  <button id="ssClose" style="position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--text);width:36px;height:36px;border-radius:4px;cursor:pointer;font-size:1rem;z-index:601;display:flex;align-items:center;justify-content:center;">✕</button>
+  <button id="ssPause" style="position:fixed;top:1rem;right:3.5rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--text);width:36px;height:36px;border-radius:4px;cursor:pointer;font-size:0.9rem;z-index:601;display:flex;align-items:center;justify-content:center;">⏸</button>
+  <img id="ssImg" src="" alt="" style="max-width:100%;max-height:85vh;object-fit:contain;transition:opacity 0.4s ease;">
+  <div id="ssCaption" style="position:fixed;bottom:3rem;left:50%;transform:translateX(-50%);font-family:'Playfair Display',serif;font-style:italic;font-size:1.8rem;color:var(--text);letter-spacing:0.02em;text-align:center;white-space:nowrap;"></div>
+  <div id="ssProgress" style="position:fixed;bottom:0;left:0;height:3px;background:var(--gold);transition:width linear;"></div>
+  <div id="ssDots" style="position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:center;max-width:90vw;"></div>
+</div>
 
 <div class="fs-lb" id="fsLb">
   <div class="fs-lb-close" id="fsClose">✕</div>
@@ -429,13 +441,81 @@ document.getElementById('lightbox').addEventListener('touchend', e => {
   else goLb(lbIdx - 1);
 }, { passive: true });
 
-let dark=true;
-document.getElementById('themeToggle').addEventListener('click',()=>{dark=!dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeToggle').textContent=dark?'☀':'☾';});
+let dark = localStorage.getItem('ia-theme') !== 'light';
+document.documentElement.setAttribute('data-theme', dark ? '' : 'light');
+document.getElementById('themeToggle').textContent = dark ? '☀' : '☾';
+document.getElementById('themeToggle').addEventListener('click', () => {
+  dark = !dark;
+  document.documentElement.setAttribute('data-theme', dark ? '' : 'light');
+  document.getElementById('themeToggle').textContent = dark ? '☀' : '☾';
+  localStorage.setItem('ia-theme', dark ? 'dark' : 'light');
+});
 const hamburger=document.getElementById('hamburger');const navbar=document.getElementById('navbar');
 hamburger.addEventListener('click',()=>navbar.classList.toggle('menu-open'));
 function closeMenu(){navbar.classList.remove('menu-open');}
 const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');}),{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ── SLIDESHOW ────────────────────────────────────────────────────────────────
+const SS_INTERVAL = 1000;
+let ssSlides = [];
+let ssIdx = 0;
+let ssTimer = null;
+let ssPaused = false;
+
+function openSlideshow() {
+  ssSlides = fotos.map(f => ({ src: f.src, name: 'Citroën Méhari' })).filter(s => s.src);
+  if (!ssSlides.length) return;
+  ssIdx = 0; ssPaused = false;
+  document.getElementById('slideshow').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  renderSs();
+  startSsTimer();
+}
+function renderSs() {
+  const s = ssSlides[ssIdx];
+  const img = document.getElementById('ssImg');
+  img.style.opacity = '0';
+  setTimeout(() => { img.src = s.src; img.style.opacity = '1'; }, 200);
+  document.getElementById('ssCaption').textContent = s.name;
+  const prog = document.getElementById('ssProgress');
+  prog.style.transition = 'none'; prog.style.width = '0%';
+  setTimeout(() => { prog.style.transition = `width ${SS_INTERVAL}ms linear`; prog.style.width = '100%'; }, 50);
+  document.getElementById('ssDots').innerHTML = ssSlides.map((_,i) =>
+    `<button onclick="ssGo(${i})" style="width:6px;height:6px;border-radius:50%;border:none;cursor:pointer;background:${i===ssIdx?'var(--gold)':'rgba(255,255,255,0.25)'};transition:background 0.3s;"></button>`
+  ).join('');
+}
+function startSsTimer() {
+  clearInterval(ssTimer);
+  if (!ssPaused) ssTimer = setInterval(() => ssGo(ssIdx + 1), SS_INTERVAL);
+}
+function ssGo(i) { ssIdx = (i + ssSlides.length) % ssSlides.length; renderSs(); startSsTimer(); }
+
+document.getElementById('ssClose').addEventListener('click', () => {
+  clearInterval(ssTimer);
+  document.getElementById('slideshow').style.display = 'none';
+  document.body.style.overflow = '';
+});
+document.getElementById('ssPause').addEventListener('click', () => {
+  ssPaused = !ssPaused;
+  document.getElementById('ssPause').textContent = ssPaused ? '▶' : '⏸';
+  if (ssPaused) { clearInterval(ssTimer); document.getElementById('ssProgress').style.transition = 'none'; }
+  else { startSsTimer(); const p = document.getElementById('ssProgress'); p.style.transition = `width ${SS_INTERVAL}ms linear`; p.style.width = '100%'; }
+});
+let ssTouchX = 0;
+document.getElementById('slideshow').addEventListener('touchstart', e => { ssTouchX = e.touches[0].clientX; }, { passive: true });
+document.getElementById('slideshow').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - ssTouchX;
+  if (Math.abs(dx) < 40) return;
+  if (dx < 0) ssGo(ssIdx + 1); else ssGo(ssIdx - 1);
+}, { passive: true });
+document.addEventListener('keydown', e => {
+  if (document.getElementById('slideshow').style.display === 'none') return;
+  if (e.key === 'ArrowLeft') ssGo(ssIdx - 1);
+  if (e.key === 'ArrowRight') ssGo(ssIdx + 1);
+  if (e.key === ' ') { e.preventDefault(); document.getElementById('ssPause').click(); }
+  if (e.key === 'Escape') document.getElementById('ssClose').click();
+});
 
 loadFromSupabase();
 </script>
