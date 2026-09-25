@@ -114,6 +114,7 @@
   .spec-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-top:0.15rem;}
   /* LIGHTBOX */
   .lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease;padding:1rem;}
+  [data-theme="light"] .lightbox{background:rgba(240,237,228,0.96);}
   .lightbox.open{opacity:1;pointer-events:all;}
   .lightbox-inner{position:relative;max-width:1000px;width:100%;max-height:90vh;}
   .lightbox-img{width:100%;max-height:70vh;object-fit:contain;border-radius:var(--radius-lg);display:block;background:var(--bg2);}
