@@ -487,9 +487,15 @@ function renderSs() {
 }
 function startSsTimer() {
   clearInterval(ssTimer);
-  if (!ssPaused) ssTimer = setInterval(() => ssGo(ssIdx + 1), SS_INTERVAL);
+  ssTimer = null;
+  if (!ssPaused) {
+    ssTimer = setInterval(() => {
+      ssIdx = (ssIdx + 1) % ssSlides.length;
+      renderSs();
+    }, SS_INTERVAL);
+  }
 }
-function ssGo(i) { ssIdx = (i + ssSlides.length) % ssSlides.length; renderSs(); startSsTimer(); }
+function ssGo(i) { ssIdx = ((i % ssSlides.length) + ssSlides.length) % ssSlides.length; renderSs(); startSsTimer(); }
 
 document.getElementById('ssClose').addEventListener('click', () => {
   clearInterval(ssTimer);
