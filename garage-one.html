@@ -91,6 +91,16 @@
   .fs-lb.open{display:flex;}
   .fs-lb img{max-width:100%;max-height:95vh;object-fit:contain;border-radius:var(--radius);}
   .fs-lb-close{position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;z-index:501;}
+  .fs-lb{position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;}
+  .fs-lb.open{display:flex;}
+  .fs-lb img{max-width:calc(100% - 100px);max-height:90vh;object-fit:contain;border-radius:var(--radius);}
+  .fs-lb-close{position:fixed;top:1rem;right:1rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;z-index:501;}
+  .fs-lb-arrow{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:44px;height:44px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;z-index:501;left:1rem;transition:background var(--transition);}
+  .fs-lb-arrow:hover{background:rgba(74,103,65,0.6);border-color:var(--green);}
+  .fs-lb-arrow-right{left:auto;right:1rem;}
+  .fs-lb-dots{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);display:flex;gap:0.5rem;z-index:501;}
+  .fs-lb-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.25);border:none;cursor:pointer;transition:background var(--transition);}
+  .fs-lb-dot.active{background:#fff;}
   .gallery-item{border-radius:var(--radius-lg);overflow:hidden;cursor:zoom-in;position:relative;transition:transform var(--transition),box-shadow var(--transition);}
   .gallery-item:hover{transform:scale(1.015);box-shadow:0 16px 40px rgba(0,0,0,0.4);}
   .ph{width:100%;height:100%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.75rem;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;min-height:180px;}
@@ -262,7 +272,10 @@
 
 <div class="fs-lb" id="fsLb">
   <div class="fs-lb-close" id="fsClose">✕</div>
+  <button class="fs-lb-arrow" id="fsPrev">‹</button>
   <img id="fsImg" src="" alt="">
+  <button class="fs-lb-arrow fs-lb-arrow-right" id="fsNext">›</button>
+  <div class="fs-lb-dots" id="fsDots"></div>
 </div>
 
 <div class="lightbox" id="lightbox">
@@ -335,22 +348,50 @@ function renderGallery() {
   }
 }
 
+let fsPhotos = [];
+let fsIdx = 0;
+
 function openFsLb(src) {
-  if (!src) return;
-  document.getElementById('fsImg').src = src;
+  fsPhotos = fotos.map(f => f.src).filter(Boolean);
+  if (!fsPhotos.length) fsPhotos = [src];
+  fsIdx = fsPhotos.indexOf(src);
+  if (fsIdx < 0) fsIdx = 0;
+  renderFsLb();
   document.getElementById('fsLb').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+function renderFsLb() {
+  document.getElementById('fsImg').src = fsPhotos[fsIdx];
+  const dots = document.getElementById('fsDots');
+  dots.innerHTML = fsPhotos.length > 1 ? fsPhotos.map((_,i) =>
+    `<button class="fs-lb-dot ${i===fsIdx?'active':''}" onclick="fsGo(${i})"></button>`
+  ).join('') : '';
+  document.getElementById('fsPrev').style.display = fsPhotos.length > 1 ? 'flex' : 'none';
+  document.getElementById('fsNext').style.display = fsPhotos.length > 1 ? 'flex' : 'none';
+}
+function fsGo(i) { fsIdx = (i + fsPhotos.length) % fsPhotos.length; renderFsLb(); }
 function closeFsLb() {
   document.getElementById('fsLb').classList.remove('open');
   document.body.style.overflow = '';
 }
 document.getElementById('fsClose').addEventListener('click', closeFsLb);
+document.getElementById('fsPrev').addEventListener('click', e => { e.stopPropagation(); fsGo(fsIdx - 1); });
+document.getElementById('fsNext').addEventListener('click', e => { e.stopPropagation(); fsGo(fsIdx + 1); });
 document.getElementById('fsLb').addEventListener('click', e => {
-  if (e.target === document.getElementById('fsLb')) closeFsLb();
+  if (e.target === document.getElementById('fsLb') || e.target === document.getElementById('fsImg')) closeFsLb();
 });
+let fsTouchX = 0;
+document.getElementById('fsLb').addEventListener('touchstart', e => { fsTouchX = e.touches[0].clientX; }, { passive: true });
+document.getElementById('fsLb').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - fsTouchX;
+  if (Math.abs(dx) < 40) return;
+  if (dx < 0) fsGo(fsIdx + 1); else fsGo(fsIdx - 1);
+}, { passive: true });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('fsLb').classList.contains('open')) closeFsLb();
+  if (!document.getElementById('fsLb').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') fsGo(fsIdx - 1);
+  if (e.key === 'ArrowRight') fsGo(fsIdx + 1);
+  if (e.key === 'Escape') closeFsLb();
 });
 
 function openLb(i){ lbIdx=i; renderLb(); document.getElementById('lightbox').classList.add('open'); document.body.style.overflow='hidden'; }
